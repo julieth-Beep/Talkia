@@ -1,0 +1,11 @@
+const express = require("express");
+const router = express.Router();
+const ChatController = require("../controllers/ChatController");
+
+router.post("/mensaje", ChatController.enviarMensaje);
+router.get("/mensajes/:conversacionId", ChatController.obtenerMensajes);
+router.post("/conversacion", ChatController.obtenerOCrearConversacion);
+router.get("/conversaciones/:uid", ChatController.obtenerConversaciones);
+router.patch("/mensajes/:conversacionId/leer", ChatController.marcarComoLeidos);
+
+module.exports = router;
