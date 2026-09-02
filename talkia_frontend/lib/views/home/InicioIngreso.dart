@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../chat/ListaConversacionesView.dart';
 
 class InicioIngresoView extends StatefulWidget {
   const InicioIngresoView({super.key});
@@ -133,7 +134,10 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                 _buildTopAppBar(),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 1024),
                       child: isMobile
@@ -202,6 +206,28 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                 ),
               ),
               const Spacer(),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ListaConversacionesView(),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: const Icon(
+                    Icons.chat_bubble_outline,
+                    color: Color(0xFF52525B),
+                    size: 24,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
               GestureDetector(
                 onTap: () {
                   setState(() {
@@ -332,7 +358,10 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
             children: [
               // Header con info del usuario
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Row(
                   children: [
                     Container(
@@ -365,7 +394,9 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                             'usuario@email.com',
                             style: TextStyle(
                               fontSize: 12,
-                              color: const Color(0xFF52525B).withValues(alpha: 0.7),
+                              color: const Color(
+                                0xFF52525B,
+                              ).withValues(alpha: 0.7),
                             ),
                           ),
                         ],
@@ -405,8 +436,12 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
     VoidCallback onTap, {
     bool isDestructive = false,
   }) {
-    final color = isDestructive ? const Color(0xFFBA1A1A) : const Color(0xFF1A1A1C);
-    final iconColor = isDestructive ? const Color(0xFFBA1A1A) : const Color(0xFF52525B);
+    final color = isDestructive
+        ? const Color(0xFFBA1A1A)
+        : const Color(0xFF1A1A1C);
+    final iconColor = isDestructive
+        ? const Color(0xFFBA1A1A)
+        : const Color(0xFF52525B);
 
     return InkWell(
       onTap: onTap,
@@ -671,7 +706,10 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
   }
 
   // ==================== LANGUAGE CHIP ====================
-  Widget _buildLanguageChip({required String language, required VoidCallback onTap}) {
+  Widget _buildLanguageChip({
+    required String language,
+    required VoidCallback onTap,
+  }) {
     return Align(
       alignment: Alignment.centerLeft,
       child: GestureDetector(
@@ -755,9 +793,7 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(999),
-        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(999)),
         child: Icon(icon, size: 20, color: const Color(0xFF52525B)),
       ),
     );
@@ -809,6 +845,20 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                   isActive: _currentIndex == 1,
                   onTap: () => setState(() => _currentIndex = 1),
                 ),
+                // Chat
+                _navItem(
+                  icon: Icons.chat_bubble_outline,
+                  label: 'Chat',
+                  isActive: false,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ListaConversacionesView(),
+                      ),
+                    );
+                  },
+                ),
                 // Perfil con dropdown
                 GestureDetector(
                   onTap: () {
@@ -830,7 +880,9 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
-                          _showProfileMenu ? Icons.person : Icons.person_outline,
+                          _showProfileMenu
+                              ? Icons.person
+                              : Icons.person_outline,
                           size: 24,
                           color: _currentIndex == 2
                               ? const Color(0xFF4F46E5)
@@ -842,7 +894,9 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                         'Perfil',
                         style: TextStyle(
                           fontSize: 12,
-                          fontWeight: _currentIndex == 2 ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight: _currentIndex == 2
+                              ? FontWeight.w600
+                              : FontWeight.w500,
                           color: _currentIndex == 2
                               ? const Color(0xFF4F46E5)
                               : const Color(0xFF52525B),
@@ -876,7 +930,9 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: isActive ? activeColor.withValues(alpha: 0.1) : Colors.transparent,
+              color: isActive
+                  ? activeColor.withValues(alpha: 0.1)
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -968,7 +1024,10 @@ class _LanguageBottomSheet extends StatelessWidget {
                 return InkWell(
                   onTap: () => onSelected(lang),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
                     child: Row(
                       children: [
                         if (isSelected)
@@ -986,7 +1045,9 @@ class _LanguageBottomSheet extends StatelessWidget {
                           lang,
                           style: TextStyle(
                             fontSize: 15,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w500,
                             color: isSelected
                                 ? const Color(0xFF4F46E5)
                                 : const Color(0xFF1A1A1C),

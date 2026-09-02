@@ -64,6 +64,16 @@ class UsuarioController {
       res.status(400).json({ error: error.message });
     }
   }
+
+  static async listarUsuarios(req, res) {
+    try {
+      const { excluir } = req.query;
+      const usuarios = await UsuarioService.listarUsuarios(excluir);
+      res.status(200).json(usuarios);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
 }
 
 module.exports = UsuarioController;

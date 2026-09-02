@@ -75,11 +75,14 @@ class UsuarioService {
     String? fotoUrl,
   }) async {
     final body = <String, dynamic>{};
-    if (username != null && username.trim().isNotEmpty) body["username"] = username.trim();
-    if (idiomaPredeterminado != null && idiomaPredeterminado.trim().isNotEmpty) {
+    if (username != null && username.trim().isNotEmpty)
+      body["username"] = username.trim();
+    if (idiomaPredeterminado != null &&
+        idiomaPredeterminado.trim().isNotEmpty) {
       body["idiomaPredeterminado"] = idiomaPredeterminado;
     }
-    if (fotoUrl != null && fotoUrl.trim().isNotEmpty) body["foto_url"] = fotoUrl;
+    if (fotoUrl != null && fotoUrl.trim().isNotEmpty)
+      body["foto_url"] = fotoUrl;
 
     final response = await http.patch(
       Uri.parse("$baseUrl/$id/perfil"),
@@ -149,6 +152,20 @@ class UsuarioService {
       return data["mensaje"];
     } else {
       throw Exception(data["error"] ?? "Error al restablecer contraseña");
+    }
+  }
+
+  static Future<List<UsuarioModel>> listarUsuarios({
+    required String excluirId,
+  }) async {
+    final response = await http.get(Uri.parse("$baseUrl?excluir=$excluirId"));
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return List<UsuarioModel>.from(data.map((u) => UsuarioModel.fromJson(u)));
+    } else {
+      throw Exception(data["error"] ?? "Error al listar usuarios");
     }
   }
 }

@@ -25,24 +25,12 @@ class MensajeModel {
       conversacionId: json['conversacionId'],
       remitenteId: json['remitenteId'],
       textoOriginal: json['textoOriginal'],
-      idiomaOriginal: json['idiomaOriginal'] ?? 'es',
+      idiomaOriginal: json['idiomaOriginal'] ?? 'Español',
       textoTraducido: json['textoTraducido'] != null
           ? Map<String, String>.from(json['textoTraducido'])
           : {},
       fecha: DateTime.parse(json['fecha']),
       leido: json['leido'] ?? false,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'conversacionId': conversacionId,
-      'remitenteId': remitenteId,
-      'textoOriginal': textoOriginal,
-      'idiomaOriginal': idiomaOriginal,
-      'textoTraducido': textoTraducido,
-      'fecha': fecha.toIso8601String(),
-      'leido': leido,
-    };
   }
 }

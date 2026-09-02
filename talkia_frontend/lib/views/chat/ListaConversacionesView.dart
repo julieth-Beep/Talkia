@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../viewmodels/chat_viewmodel.dart';
 import '../../viewmodels/auth_viewmodel.dart';
+import '../../viewmodels/chat_viewmodel.dart';
+import '../../data/services/Usuario_Service.dart';
+import '../../data/models/Usuario_Model.dart';
 import 'ChatView.dart';
 
 class ListaConversacionesView extends StatefulWidget {
@@ -12,110 +14,79 @@ class ListaConversacionesView extends StatefulWidget {
 }
 
 class _ListaConversacionesViewState extends State<ListaConversacionesView> {
+  List<UsuarioModel> _usuarios = [];
+  bool _cargando = true;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final auth = context.read<AuthViewModel>();
-      if (auth.usuario != null) {
-        context.read<ChatViewModel>().cargarConversaciones(auth.usuario!.id!);
-      }
-    });
+    _cargarUsuarios();
+  }
+
+  Future<void> _cargarUsuarios() async {
+    final auth = context.read<AuthViewModel>();
+    if (auth.usuario?.id == null) return;
+
+    try {
+      final usuarios = await UsuarioService.listarUsuarios(excluirId: auth.usuario!.id!);
+      setState(() {
+        _usuarios = usuarios;
+        _cargando = false;
+      });
+    } catch (e) {
+      setState(() => _cargando = false);
+    }
+  }
+
+  Future<void> _abrirChatCon(UsuarioModel otroUsuario) async {
+    final auth = context.read<AuthViewModel>();
+    final chatVM = context.read<ChatViewModel>();
+
+    final conversacion = await chatVM.obtenerOCrearConversacion(
+      uid1: auth.usuario!.id!,
+      uid2: otroUsuario.id!,
+    );
+
+    if (!mounted || conversacion == null) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatView(
+          conversacionId: conversacion.id,
+          otroUsuarioNombre: otroUsuario.nombre,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final chatVM = context.watch<ChatViewModel>();
-    final auth = context.watch<AuthViewModel>();
-    final usuario = auth.usuario;
-
-    if (usuario == null) {
-      return const Scaffold(
-        body: Center(child: Text("Inicia sesión para ver tus conversaciones")),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Mensajes"),
+        title: const Text("Contactos"),
         backgroundColor: const Color(0xFF006677),
         foregroundColor: Colors.white,
       ),
-      body: chatVM.isLoading
+      body: _cargando
           ? const Center(child: CircularProgressIndicator())
-          : chatVM.conversaciones.isEmpty
-              ? const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey),
-                      SizedBox(height: 16),
-                      Text(
-                        "No tienes conversaciones",
-                        style: TextStyle(fontSize: 18, color: Colors.grey),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        "Busca contactos para empezar a chatear",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                )
+          : _usuarios.isEmpty
+              ? const Center(child: Text("No hay otros usuarios registrados aún"))
               : ListView.builder(
-                  itemCount: chatVM.conversaciones.length,
+                  itemCount: _usuarios.length,
                   itemBuilder: (context, index) {
-                    final conversacion = chatVM.conversaciones[index];
-                    final contacto = conversacion.contacto;
-                    final idiomaUsuario = usuario.idiomaPredeterminado;
-                    
-                    // Obtener el último mensaje traducido
-                    String ultimoMensaje = "Sin mensajes";
-                    if (conversacion.ultimoMensajeTraducido != null &&
-                        conversacion.ultimoMensajeTraducido!.containsKey(idiomaUsuario)) {
-                      ultimoMensaje = conversacion.ultimoMensajeTraducido![idiomaUsuario]!;
-                    } else if (conversacion.ultimoMensaje != null) {
-                      ultimoMensaje = conversacion.ultimoMensaje!;
-                    }
-
+                    final usuario = _usuarios[index];
                     return ListTile(
                       leading: CircleAvatar(
                         backgroundColor: const Color(0xFF006677),
                         child: Text(
-                          contacto != null
-                              ? "${contacto['nombre'][0]}${contacto['apellido']?.isNotEmpty == true ? contacto['apellido'][0] : ''}"
-                              : "?",
+                          usuario.nombre.isNotEmpty ? usuario.nombre[0] : "?",
                           style: const TextStyle(color: Colors.white),
                         ),
                       ),
-                      title: Text(
-                        contacto != null
-                            ? "${contacto['nombre']} ${contacto['apellido'] ?? ''}"
-                            : "Usuario desconocido",
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        ultimoMensaje,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                      trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-                      onTap: () {
-                        if (contacto != null) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ChatView(
-                                conversacionId: conversacion.id,
-                                otroUsuarioId: contacto['id'] ?? '',
-                                otroUsuarioNombre: "${contacto['nombre']} ${contacto['apellido'] ?? ''}",
-                                otroUsuarioIdioma: contacto['idioma'] ?? "Español",
-                              ),
-                            ),
-                          );
-                        }
-                      },
+                      title: Text("${usuario.nombre} ${usuario.apellido}"),
+                      subtitle: Text("Idioma: ${usuario.idiomaPredeterminado}"),
+                      onTap: () => _abrirChatCon(usuario),
                     );
                   },
                 ),

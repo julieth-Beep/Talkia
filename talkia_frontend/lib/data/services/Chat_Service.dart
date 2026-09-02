@@ -16,124 +16,90 @@ class ChatService {
     }
   }
 
-  //  Enviar mensaje
   static Future<MensajeModel> enviarMensaje({
     required String conversacionId,
     required String remitenteId,
     required String texto,
   }) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/mensaje"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "conversacionId": conversacionId,
-          "remitenteId": remitenteId,
-          "texto": texto,
-        }),
-      );
+    final response = await http.post(
+      Uri.parse("$baseUrl/mensaje"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "conversacionId": conversacionId,
+        "remitenteId": remitenteId,
+        "texto": texto,
+      }),
+    );
 
-      final data = jsonDecode(response.body);
+    final data = jsonDecode(response.body);
 
-      if (response.statusCode == 201) {
-        return MensajeModel.fromJson(data);
-      } else {
-        throw Exception(data["error"] ?? "Error al enviar mensaje");
-      }
-    } catch (e) {
-      throw Exception("Error de conexión: $e");
+    if (response.statusCode == 201) {
+      return MensajeModel.fromJson(data);
+    } else {
+      throw Exception(data["error"] ?? "Error al enviar mensaje");
     }
   }
 
-  //  Obtener mensajes de una conversación
   static Future<List<MensajeModel>> obtenerMensajes(
     String conversacionId, {
     int limit = 50,
   }) async {
-    try {
-      final response = await http.get(
-        Uri.parse("$baseUrl/mensajes/$conversacionId?limit=$limit"),
-        headers: {"Content-Type": "application/json"},
-      );
+    final response = await http.get(
+      Uri.parse("$baseUrl/mensajes/$conversacionId?limit=$limit"),
+    );
 
-      final data = jsonDecode(response.body);
+    final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
-        return List<MensajeModel>.from(
-          data.map((m) => MensajeModel.fromJson(m))
-        );
-      } else {
-        throw Exception(data["error"] ?? "Error al obtener mensajes");
-      }
-    } catch (e) {
-      throw Exception("Error de conexión: $e");
+    if (response.statusCode == 200) {
+      return List<MensajeModel>.from(data.map((m) => MensajeModel.fromJson(m)));
+    } else {
+      throw Exception(data["error"] ?? "Error al obtener mensajes");
     }
   }
 
-  //  Obtener o crear conversación
   static Future<ConversacionModel> obtenerOCrearConversacion({
     required String uid1,
     required String uid2,
   }) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/conversacion"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"uid1": uid1, "uid2": uid2}),
-      );
+    final response = await http.post(
+      Uri.parse("$baseUrl/conversacion"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"uid1": uid1, "uid2": uid2}),
+    );
 
-      final data = jsonDecode(response.body);
+    final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
-        return ConversacionModel.fromJson(data);
-      } else {
-        throw Exception(data["error"] ?? "Error al crear conversación");
-      }
-    } catch (e) {
-      throw Exception("Error de conexión: $e");
+    if (response.statusCode == 200) {
+      return ConversacionModel.fromJson(data);
+    } else {
+      throw Exception(data["error"] ?? "Error al crear conversación");
     }
   }
 
-  //  Obtener conversaciones de un usuario
   static Future<List<ConversacionModel>> obtenerConversaciones(String uid) async {
-    try {
-      final response = await http.get(
-        Uri.parse("$baseUrl/conversaciones/$uid"),
-        headers: {"Content-Type": "application/json"},
-      );
+    final response = await http.get(Uri.parse("$baseUrl/conversaciones/$uid"));
 
-      final data = jsonDecode(response.body);
+    final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
-        return List<ConversacionModel>.from(
-          data.map((c) => ConversacionModel.fromJson(c))
-        );
-      } else {
-        throw Exception(data["error"] ?? "Error al obtener conversaciones");
-      }
-    } catch (e) {
-      throw Exception("Error de conexión: $e");
+    if (response.statusCode == 200) {
+      return List<ConversacionModel>.from(data.map((c) => ConversacionModel.fromJson(c)));
+    } else {
+      throw Exception(data["error"] ?? "Error al obtener conversaciones");
     }
   }
 
-  //  Marcar mensajes como leídos
   static Future<void> marcarComoLeidos({
     required String conversacionId,
     required String userId,
   }) async {
     try {
-      final response = await http.patch(
+      await http.patch(
         Uri.parse("$baseUrl/mensajes/$conversacionId/leer"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"userId": userId}),
       );
-
-      if (response.statusCode != 200) {
-        final data = jsonDecode(response.body);
-        throw Exception(data["error"] ?? "Error al marcar mensajes como leídos");
-      }
-    } catch (e) {
-      print("Error al marcar leídos: $e");
+    } catch (_) {
+      // Falla silenciosa: no es crítico para la experiencia del chat
     }
   }
 }

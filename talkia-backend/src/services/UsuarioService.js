@@ -174,6 +174,13 @@ class UsuarioService {
 
     return { mensaje: "Contraseña actualizada correctamente." };
   }
+
+  static async listarUsuarios(excluirId) {
+    const usuarios = await UsuarioRepository.listarTodos();
+    return usuarios
+      .filter(u => u.id !== excluirId)
+      .map(({ contraseña, ...resto }) => resto); // nunca devolver la contraseña
+  }
 }
 
 module.exports = UsuarioService;

@@ -8,5 +8,6 @@ router.patch("/:id/perfil", UsuarioController.completarPerfil);
 router.post("/google", UsuarioController.loginConGoogle);
 router.post("/recuperar", UsuarioController.solicitarRecuperacion);
 router.post("/restablecer", UsuarioController.restablecerContraseña);
+router.get("/", UsuarioController.listarUsuarios);
 
 module.exports = router;

@@ -9,15 +9,26 @@ class MensajeRepository {
 
   // Obtener mensajes de una conversación (ordenados por fecha)
   static async obtenerPorConversacion(conversacionId, limit = 50) {
+    // Quitamos el .orderBy de Firestore para evitar el error de índice compuesto
     const snapshot = await db
       .collection("mensajes")
       .where("conversacionId", "==", conversacionId)
-      .orderBy("fecha", "desc")
-      .limit(limit)
+      .limit(limit * 2) // Traemos un poco más por seguridad
       .get();
 
     if (snapshot.empty) return [];
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Mapeamos y ordenamos en memoria
+    const mensajes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // Ordenar del más nuevo al más viejo
+    mensajes.sort((a, b) => {
+      const fa = new Date(a.fecha).getTime();
+      const fb = new Date(b.fecha).getTime();
+      return fb - fa; 
+    });
+
+    return mensajes.slice(0, limit);
   }
 
   // Marcar mensajes como leídos (para el otro usuario)

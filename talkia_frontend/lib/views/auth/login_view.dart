@@ -4,10 +4,9 @@ import '../../viewmodels/auth_viewmodel.dart';
 import 'registro_view.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:google_sign_in_web/google_sign_in_web.dart' as web;
-import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 import '../home/InicioIngreso.dart';
 import 'recuperarContraseña_view.dart';
+import 'google_web_button.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -333,9 +332,6 @@ class _BotonGoogleWeb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final web.GoogleSignInPlugin googleSignInPlugin =
-        GoogleSignInPlatform.instance as web.GoogleSignInPlugin;
-
-    return googleSignInPlugin.renderButton();
+    return buildGoogleWebButton();
   }
 }

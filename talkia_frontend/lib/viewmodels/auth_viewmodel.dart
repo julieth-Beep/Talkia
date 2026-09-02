@@ -99,7 +99,7 @@ class AuthViewModel extends ChangeNotifier {
 
     final googleSignIn = GoogleSignIn.instance;
     await googleSignIn.initialize(
-      clientId: "689429424255-gb61ctcs54586q0q4o0ur93vo9ch0pcq.apps.googleusercontent.com",
+      serverClientId: "61499064639-ploo04oufa9dtqh2a5eibpovg7nlpr2o.apps.googleusercontent.com",
     );
 
     _googleSub = googleSignIn.authenticationEvents.listen((event) async {

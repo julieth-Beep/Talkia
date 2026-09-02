@@ -30,6 +30,12 @@ class UsuarioRepository {
     const actualizado = await docRef.get();
     return { id: actualizado.id, ...actualizado.data() };
   }
+
+  static async listarTodos() {
+    const snapshot = await coleccion.get();
+    if (snapshot.empty) return [];
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
 }
 
 module.exports = UsuarioRepository;
