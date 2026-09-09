@@ -7,29 +7,18 @@ const Mensaje = require("../models/Mensaje");
 class ChatService {
   // 📤 ENVIAR MENSAJE
   static async enviarMensaje({ conversacionId, remitenteId, texto }) {
-    // 1. Validar que la conversación existe
     const conversacion = await ConversacionRepository.obtenerPorId(conversacionId);
     if (!conversacion) throw new Error("Conversación no encontrada");
 
-    console.log("👥 Participantes de la conversación:", conversacion.participantes);
-
-    // 2. Obtener el idioma del remitente (desde su perfil, no adivinado)
     const remitente = await UsuarioRepository.buscarPorId(remitenteId);
     const idiomaOriginal = remitente?.idiomaPredeterminado || "Español";
 
-    console.log(`📌 Remitente: ${remitenteId} → idioma: ${idiomaOriginal}`);
-
-    // 3. Obtener los idiomas de los participantes
     const participantes = conversacion.participantes;
     const traducciones = {};
 
-    // 4. Traducir para cada participante (excepto el remitente)
     for (const uid of participantes) {
-      if (uid === remitenteId) continue; // No traducir para el remitente
-
+      if (uid === remitenteId) continue;
       const usuario = await UsuarioRepository.buscarPorId(uid);
-      console.log(`📌 Revisando uid=${uid} → usuario encontrado:`, usuario);
-
       if (usuario && usuario.idiomaPredeterminado) {
         const traducido = await TraduccionService.traducir(
           texto,
@@ -37,12 +26,9 @@ class ChatService {
           idiomaOriginal
         );
         traducciones[usuario.idiomaPredeterminado] = traducido;
-      } else {
-        console.log(`⚠️ El usuario ${uid} no existe o no tiene idiomaPredeterminado`);
       }
     }
 
-    // 5. Crear el mensaje
     const mensaje = new Mensaje({
       conversacionId,
       remitenteId,
@@ -51,10 +37,8 @@ class ChatService {
       textoTraducido: traducciones,
     });
 
-    // 6. Guardar en Firestore
     const mensajeGuardado = await MensajeRepository.guardar(mensaje);
 
-    // 7. Actualizar el último mensaje de la conversación
     await ConversacionRepository.actualizarUltimoMensaje(
       conversacionId,
       texto,
@@ -67,24 +51,21 @@ class ChatService {
   // 📥 OBTENER MENSAJES DE UNA CONVERSACIÓN
   static async obtenerMensajes(conversacionId, limit = 50) {
     const mensajes = await MensajeRepository.obtenerPorConversacion(conversacionId, limit);
-    return mensajes.reverse(); // Orden cronológico (del más antiguo al más nuevo)
+    return mensajes.reverse();
   }
 
-  // 🔄 OBTENER O CREAR CONVERSACIÓN ENTRE DOS USUARIOS
+  // 🔄 OBTENER O CREAR CONVERSACIÓN
   static async obtenerOCrearConversacion(uid1, uid2) {
     let conversacion = await ConversacionRepository.obtenerConversacionEntre(uid1, uid2);
-
     if (!conversacion) {
       conversacion = await ConversacionRepository.crear([uid1, uid2], "individual");
     }
-
     return conversacion;
   }
 
   // 📋 OBTENER CONVERSACIONES DE UN USUARIO
   static async obtenerConversaciones(uid) {
     const conversaciones = await ConversacionRepository.obtenerConversacionesDeUsuario(uid);
-
     const conversacionesEnriquecidas = await Promise.all(
       conversaciones.map(async (conv) => {
         const otroParticipante = conv.participantes.find(p => p !== uid);
@@ -104,13 +85,34 @@ class ChatService {
         return conv;
       })
     );
-
     return conversacionesEnriquecidas;
   }
 
   // ✅ MARCAR MENSAJES COMO LEÍDOS
   static async marcarComoLeidos(conversacionId, userId) {
     await MensajeRepository.marcarComoLeidos(conversacionId, userId);
+  }
+
+  // 🎤 ENVIAR MENSAJE DE AUDIO
+  static async enviarMensajeAudio({ conversacionId, remitenteId, nombreArchivo }) {
+    const conversacion = await ConversacionRepository.obtenerPorId(conversacionId);
+    if (!conversacion) throw new Error("Conversación no encontrada");
+
+    // 🔥 Guardar SOLO la ruta relativa
+    const audioUrl = `/uploads/audios/${nombreArchivo}`;
+
+    const mensaje = new Mensaje({
+      conversacionId,
+      remitenteId,
+      tipo: "audio",
+      audioUrl,
+    });
+
+    const mensajeGuardado = await MensajeRepository.guardar(mensaje);
+
+    await ConversacionRepository.actualizarUltimoMensaje(conversacionId, "🎤 Nota de voz", {});
+
+    return mensajeGuardado;
   }
 }
 

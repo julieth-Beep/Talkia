@@ -216,6 +216,11 @@ class _CompletarPerfilViewState extends State<CompletarPerfilView> {
                   DropdownMenuItem(value: 'Francés', child: Text('Francés')),
                   DropdownMenuItem(value: 'Italiano', child: Text('Italiano')),
                   DropdownMenuItem(value: 'Mandarín', child: Text('Mandarín')),
+                  DropdownMenuItem(value: 'Alemán', child: Text('Alemán')),
+                  DropdownMenuItem(value: 'Portugués', child: Text('Portugués')),
+                  DropdownMenuItem(value: 'Ruso', child: Text('Ruso')),
+                  DropdownMenuItem(value: 'Japonés', child: Text('Japonés')),
+                  DropdownMenuItem(value: 'Coreano', child: Text('Coreano')),
                 ],
                 onChanged: (value) {
                   setState(() => _idiomaSeleccionado = value);

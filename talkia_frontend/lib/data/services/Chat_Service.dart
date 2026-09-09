@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import '../models/Mensaje_Model.dart';
 import '../models/Conversacion_Model.dart';
+import 'dart:io';
 
 class ChatService {
   static String get baseUrl {
@@ -13,6 +14,16 @@ class ChatService {
       return "http://10.0.2.2:3000/api/chat";
     } else {
       return "http://localhost:3000/api/chat";
+    }
+  }
+
+  static String get audioBaseUrl {
+    if (kIsWeb) {
+      return "http://localhost:3000";
+    } else if (Platform.isAndroid) {
+      return "http://10.0.2.2:3000";
+    } else {
+      return "http://localhost:3000";
     }
   }
 
@@ -48,9 +59,19 @@ class ChatService {
       Uri.parse("$baseUrl/mensajes/$conversacionId?limit=$limit"),
     );
 
-    final data = jsonDecode(response.body);
+    var data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
+      // CORREGIR URLs de audio
+      for (var mensaje in data) {
+        if (mensaje['audioUrl'] != null) {
+          String audioUrl = mensaje['audioUrl'];
+          // Si la URL es relativa (empieza con /), completarla
+          if (audioUrl.startsWith('/')) {
+            mensaje['audioUrl'] = "$audioBaseUrl$audioUrl";
+          }
+        }
+      }
       return List<MensajeModel>.from(data.map((m) => MensajeModel.fromJson(m)));
     } else {
       throw Exception(data["error"] ?? "Error al obtener mensajes");
@@ -76,13 +97,17 @@ class ChatService {
     }
   }
 
-  static Future<List<ConversacionModel>> obtenerConversaciones(String uid) async {
+  static Future<List<ConversacionModel>> obtenerConversaciones(
+    String uid,
+  ) async {
     final response = await http.get(Uri.parse("$baseUrl/conversaciones/$uid"));
 
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      return List<ConversacionModel>.from(data.map((c) => ConversacionModel.fromJson(c)));
+      return List<ConversacionModel>.from(
+        data.map((c) => ConversacionModel.fromJson(c)),
+      );
     } else {
       throw Exception(data["error"] ?? "Error al obtener conversaciones");
     }
@@ -99,7 +124,41 @@ class ChatService {
         body: jsonEncode({"userId": userId}),
       );
     } catch (_) {
-      // Falla silenciosa: no es crítico para la experiencia del chat
+      // Falla silenciosa
+    }
+  }
+
+  static Future<MensajeModel> enviarMensajeAudio({
+    required String conversacionId,
+    required String remitenteId,
+    required File archivoAudio,
+  }) async {
+    final request = http.MultipartRequest(
+      "POST",
+      Uri.parse("$baseUrl/mensaje-audio"),
+    );
+
+    request.fields["conversacionId"] = conversacionId;
+    request.fields["remitenteId"] = remitenteId;
+    request.files.add(
+      await http.MultipartFile.fromPath("audio", archivoAudio.path),
+    );
+
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString();
+    var data = jsonDecode(responseBody);
+
+    if (response.statusCode == 201) {
+      // CORREGIR URL del audio
+      if (data['audioUrl'] != null) {
+        String audioUrl = data['audioUrl'];
+        if (audioUrl.startsWith('/')) {
+          data['audioUrl'] = "$audioBaseUrl$audioUrl";
+        }
+      }
+      return MensajeModel.fromJson(data);
+    } else {
+      throw Exception(data["error"] ?? "Error al enviar audio");
     }
   }
 }

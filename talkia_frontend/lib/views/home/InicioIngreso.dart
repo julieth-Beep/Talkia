@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../chat/ListaConversacionesView.dart';
+import '../../data/services/Traduccion_Service.dart';
 
 class InicioIngresoView extends StatefulWidget {
   const InicioIngresoView({super.key});
@@ -19,6 +20,7 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
 
   bool _showConfigMenu = false;
   bool _showProfileMenu = false;
+  bool _traduciendo = false;
   int _currentIndex = 0;
 
   final List<String> _languages = [
@@ -30,6 +32,8 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
     'Portugués',
     'Alemán',
     'Japonés',
+    'Ruso',
+    'Coreano',
   ];
 
   @override
@@ -65,11 +69,30 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
     });
   }
 
-  void _traducir() {
-    // TODO: Conectar con API de traducción
-    setState(() {
-      _targetController.text = 'Traducción simulada...';
-    });
+  void _traducir() async {
+    final texto = _sourceController.text.trim();
+    if (texto.isEmpty || _traduciendo) return;
+
+    setState(() => _traduciendo = true);
+
+    try {
+      final resultado = await TraduccionService.traducir(
+        texto: texto,
+        idiomaDestino: _targetLang,
+        idiomaOrigen: _sourceLang,
+      );
+      if (!mounted) return;
+      setState(() {
+        _targetController.text = resultado;
+        _traduciendo = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _traduciendo = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al traducir: $e')),
+      );
+    }
   }
 
   void _copiarTexto() {
@@ -78,15 +101,11 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Texto copiado'),
-          backgroundColor: Color(0xFF4F46E5),
+          backgroundColor: Color.fromARGB(255, 163, 159, 233),
           duration: Duration(seconds: 2),
         ),
       );
     }
-  }
-
-  void _compartirTexto() {
-    // TODO: Implementar compartir
   }
 
   void _showLanguageSelector({required bool isSource}) {
@@ -356,7 +375,6 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header con info del usuario
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -508,7 +526,7 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
         Stack(
           children: [
             Container(
-              constraints: const BoxConstraints(minHeight: 350),
+              height: 350, // <-- ALTURA FIJA: ya no crece con el texto
               decoration: BoxDecoration(
                 color: const Color(0xFFFDFDFD),
                 borderRadius: BorderRadius.circular(28),
@@ -527,30 +545,32 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                 ),
               ),
               padding: const EdgeInsets.all(24),
-              child: ListenableBuilder(
-                listenable: _sourceController,
-                builder: (context, child) {
-                  return TextField(
-                    controller: _sourceController,
-                    maxLines: null,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      height: 1.5,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF1A1A1C),
-                    ),
-                    decoration: const InputDecoration(
-                      hintText: 'Escribe algo para traducir...',
-                      hintStyle: TextStyle(
-                        color: Color(0xFF52525B),
-                        fontWeight: FontWeight.w400,
+              child: SingleChildScrollView(
+                child: ListenableBuilder(
+                  listenable: _sourceController,
+                  builder: (context, child) {
+                    return TextField(
+                      controller: _sourceController,
+                      maxLines: null,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        height: 1.5,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF1A1A1C),
                       ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  );
-                },
+                      decoration: const InputDecoration(
+                        hintText: 'Escribe algo para traducir...',
+                        hintStyle: TextStyle(
+                          color: Color(0xFF52525B),
+                          fontWeight: FontWeight.w400,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    );
+                  },
+                ),
               ),
             ),
             Positioned(
@@ -573,7 +593,6 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _actionButton(Icons.close, 'Limpiar', _clearSource),
-                    _actionButton(Icons.mic_none, 'Micrófono', () {}),
                   ],
                 ),
               ),
@@ -584,11 +603,12 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: _traducir,
+            onPressed: _traduciendo ? null : _traducir,
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 40),
               backgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
+              disabledBackgroundColor: Colors.transparent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(999),
               ),
@@ -608,21 +628,30 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                 ],
               ),
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 40),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Traducir',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+              child: _traduciendo
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Traducir',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                      ],
                     ),
-                  ),
-                  SizedBox(width: 8),
-                  Icon(Icons.arrow_forward, color: Colors.white, size: 20),
-                ],
-              ),
             ),
           ),
         ),
@@ -640,7 +669,7 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
         ),
         const SizedBox(height: 24),
         Container(
-          constraints: const BoxConstraints(minHeight: 350),
+          height: 350, // <-- ALTURA FIJA: ya no se encoge con el texto
           decoration: BoxDecoration(
             color: const Color(0xFF4F46E5).withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(28),
@@ -655,24 +684,30 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
           padding: const EdgeInsets.all(24),
           child: Stack(
             children: [
-              ListenableBuilder(
-                listenable: _targetController,
-                builder: (context, child) {
-                  return Text(
-                    _targetController.text.isEmpty
-                        ? 'La traducción aparecerá aquí...'
-                        : _targetController.text,
-                    style: TextStyle(
-                      fontSize: 22,
-                      height: 1.5,
-                      fontWeight: FontWeight.w500,
-                      color: _targetController.text.isEmpty
-                          ? const Color(0xFF52525B).withValues(alpha: 0.8)
-                          : const Color(0xFF1A1A1C),
-                    ),
-                  );
-                },
+              // Texto con scroll, alineado arriba
+              Positioned.fill(
+                child: SingleChildScrollView(
+                  child: ListenableBuilder(
+                    listenable: _targetController,
+                    builder: (context, child) {
+                      return Text(
+                        _targetController.text.isEmpty
+                            ? 'La traducción aparecerá aquí...'
+                            : _targetController.text,
+                        style: TextStyle(
+                          fontSize: 22,
+                          height: 1.5,
+                          fontWeight: FontWeight.w500,
+                          color: _targetController.text.isEmpty
+                              ? const Color(0xFF52525B).withValues(alpha: 0.8)
+                              : const Color(0xFF1A1A1C),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
+              // Botones de acción siempre abajo a la derecha
               Positioned(
                 bottom: 0,
                 right: 0,
@@ -693,7 +728,6 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _actionButton(Icons.content_copy, 'Copiar', _copiarTexto),
-                      _actionButton(Icons.share, 'Compartir', _compartirTexto),
                     ],
                   ),
                 ),
@@ -831,21 +865,18 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                // Inicio
                 _navItem(
                   icon: Icons.translate,
                   label: 'Inicio',
                   isActive: _currentIndex == 0,
                   onTap: () => setState(() => _currentIndex = 0),
                 ),
-                // Historial
                 _navItem(
                   icon: Icons.history,
                   label: 'Historial',
                   isActive: _currentIndex == 1,
                   onTap: () => setState(() => _currentIndex = 1),
                 ),
-                // Chat
                 _navItem(
                   icon: Icons.chat_bubble_outline,
                   label: 'Chat',
@@ -859,7 +890,6 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                     );
                   },
                 ),
-                // Perfil con dropdown
                 GestureDetector(
                   onTap: () {
                     setState(() {
@@ -919,8 +949,8 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
     required bool isActive,
     required VoidCallback onTap,
   }) {
-    final activeColor = const Color(0xFF4F46E5);
-    final inactiveColor = const Color(0xFF52525B);
+    const activeColor = Color(0xFF4F46E5);
+    const inactiveColor = Color(0xFF52525B);
 
     return GestureDetector(
       onTap: onTap,

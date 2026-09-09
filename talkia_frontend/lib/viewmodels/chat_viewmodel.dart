@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../data/models/Mensaje_Model.dart';
@@ -35,7 +36,6 @@ class ChatViewModel extends ChangeNotifier {
         remitenteId: remitenteId,
         texto: texto.trim(),
       );
-      // Refrescamos inmediatamente después de enviar
       await _cargarMensajes(conversacionId);
       return true;
     } catch (e) {
@@ -50,7 +50,8 @@ class ChatViewModel extends ChangeNotifier {
     _cargarMensajes(conversacionId);
 
     _pollingTimer?.cancel();
-    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+    // ✅ CAMBIO 1: Polling cada 15 segundos en vez de 3 (reduce cuota 5x)
+    _pollingTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       _cargarMensajes(conversacionId);
     });
   }
@@ -58,11 +59,33 @@ class ChatViewModel extends ChangeNotifier {
   Future<void> _cargarMensajes(String conversacionId) async {
     try {
       final nuevos = await ChatService.obtenerMensajes(conversacionId);
-      _mensajes = nuevos;
-      notifyListeners();
+      
+      // ✅ CAMBIO 2: Solo notifica si realmente cambió algo (ahorra rebuilds y lecturas)
+      if (_hayCambios(nuevos)) {
+        _mensajes = nuevos;
+        notifyListeners();
+      }
     } catch (e) {
-      debugPrint("Error en polling de mensajes: $e");
+      final errorStr = e.toString();
+      // ✅ CAMBIO 3: Detecta error de cuota y detiene el polling para no seguir gastando
+      if (errorStr.contains('RESOURCE_EXHAUSTED') || errorStr.contains('Quota exceeded')) {
+        debugPrint("🚫 Cuota de Firestore agotada. Polling pausado.");
+        _errorMessage = "Límite de uso diario alcanzado. Intenta mañana.";
+        notifyListeners();
+        detenerEscuchaMensajes(); // Detiene el timer para no seguir gastando
+      } else {
+        debugPrint("Error en polling de mensajes: $e");
+      }
     }
+  }
+
+  // ✅ NUEVO: Compara si la lista de mensajes realmente cambió
+  bool _hayCambios(List<MensajeModel> nuevos) {
+    if (nuevos.length != _mensajes.length) return true;
+    if (nuevos.isEmpty && _mensajes.isEmpty) return false;
+    if (nuevos.isEmpty || _mensajes.isEmpty) return true;
+    // Compara el último mensaje por ID
+    return nuevos.last.id != _mensajes.last.id;
   }
 
   void detenerEscuchaMensajes() {
@@ -77,7 +100,10 @@ class ChatViewModel extends ChangeNotifier {
   }) async {
     _setLoading(true);
     try {
-      final conversacion = await ChatService.obtenerOCrearConversacion(uid1: uid1, uid2: uid2);
+      final conversacion = await ChatService.obtenerOCrearConversacion(
+        uid1: uid1,
+        uid2: uid2,
+      );
       _setLoading(false);
       return conversacion;
     } catch (e) {
@@ -100,11 +126,14 @@ class ChatViewModel extends ChangeNotifier {
     required String conversacionId,
     required String userId,
   }) async {
-    await ChatService.marcarComoLeidos(conversacionId: conversacionId, userId: userId);
+    await ChatService.marcarComoLeidos(
+      conversacionId: conversacionId,
+      userId: userId,
+    );
   }
 
   String obtenerTextoTraducido(MensajeModel mensaje, String idiomaUsuario) {
-    return mensaje.textoTraducido[idiomaUsuario] ?? mensaje.textoOriginal;
+    return mensaje.textoTraducido[idiomaUsuario] ?? mensaje.textoOriginal ?? "";
   }
 
   bool esMensajePropio(MensajeModel mensaje, String userId) {
@@ -126,5 +155,25 @@ class ChatViewModel extends ChangeNotifier {
   void dispose() {
     detenerEscuchaMensajes();
     super.dispose();
+  }
+
+  Future<bool> enviarMensajeAudio({
+    required String conversacionId,
+    required String remitenteId,
+    required File archivoAudio,
+  }) async {
+    try {
+      await ChatService.enviarMensajeAudio(
+        conversacionId: conversacionId,
+        remitenteId: remitenteId,
+        archivoAudio: archivoAudio,
+      );
+      await _cargarMensajes(conversacionId);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
   }
 }

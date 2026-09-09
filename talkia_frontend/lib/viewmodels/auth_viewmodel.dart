@@ -3,6 +3,7 @@ import 'dart:async';
 import '../data/models/Usuario_Model.dart';
 import '../data/services/Usuario_Service.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AuthViewModel extends ChangeNotifier {
   bool _isLoading = false;
@@ -46,7 +47,10 @@ class AuthViewModel extends ChangeNotifier {
   }) async {
     _setLoading(true);
     try {
-      _usuario = await UsuarioService.iniciarSesion(correo: correo, password: password);
+      _usuario = await UsuarioService.iniciarSesion(
+        correo: correo,
+        password: password,
+      );
       _setLoading(false);
       return true;
     } catch (e) {
@@ -98,17 +102,29 @@ class AuthViewModel extends ChangeNotifier {
     if (_googleInicializado) return;
 
     final googleSignIn = GoogleSignIn.instance;
-    await googleSignIn.initialize(
-      serverClientId: "61499064639-ploo04oufa9dtqh2a5eibpovg7nlpr2o.apps.googleusercontent.com",
-    );
 
-    _googleSub = googleSignIn.authenticationEvents.listen((event) async {
-      if (event is GoogleSignInAuthenticationEventSignIn) {
-        await _procesarLoginGoogle(event.user);
-      }
-    }, onError: (error) {
-      _setError("Error con Google: $error");
-    });
+    if (kIsWeb) {
+      await googleSignIn.initialize(
+        clientId:
+            "61499064639-ploo04oufa9dtqh2a5eibpovg7nlpr2o.apps.googleusercontent.com",
+      );
+    } else {
+      await googleSignIn.initialize(
+        serverClientId:
+            "61499064639-ploo04oufa9dtqh2a5eibpovg7nlpr2o.apps.googleusercontent.com",
+      );
+    }
+
+    _googleSub = googleSignIn.authenticationEvents.listen(
+      (event) async {
+        if (event is GoogleSignInAuthenticationEventSignIn) {
+          await _procesarLoginGoogle(event.user);
+        }
+      },
+      onError: (error) {
+        _setError("Error con Google: $error");
+      },
+    );
 
     _googleInicializado = true;
     notifyListeners();
@@ -128,7 +144,9 @@ class AuthViewModel extends ChangeNotifier {
         notifyListeners();
         return false;
       }
-      _setError("Error al iniciar sesión con Google: ${e.description ?? e.code}");
+      _setError(
+        "Error al iniciar sesión con Google: ${e.description ?? e.code}",
+      );
       return false;
     } catch (e) {
       _setError(e.toString().replaceFirst('Exception: ', ''));

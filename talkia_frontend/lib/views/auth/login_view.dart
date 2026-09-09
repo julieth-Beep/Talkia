@@ -40,12 +40,6 @@ class _LoginViewState extends State<LoginView> {
     if (_yaNavego || !mounted) return;
     _yaNavego = true;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('¡Inicio de sesión exitoso!'),
-        backgroundColor: Color(0xFF006677),
-      ),
-    );
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const InicioIngresoView()),

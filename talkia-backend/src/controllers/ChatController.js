@@ -5,7 +5,7 @@ class ChatController {
   static async enviarMensaje(req, res) {
     try {
       const { conversacionId, remitenteId, texto } = req.body;
-      
+
       if (!conversacionId || !remitenteId || !texto) {
         return res.status(400).json({ error: "Faltan datos requeridos" });
       }
@@ -84,6 +84,27 @@ class ChatController {
       res.status(200).json({ message: "Mensajes marcados como leídos" });
     } catch (error) {
       console.error("Error marcando mensajes como leídos:", error);
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  static async enviarMensajeAudio(req, res) {
+    try {
+      const { conversacionId, remitenteId } = req.body;
+
+      if (!conversacionId || !remitenteId || !req.file) {
+        return res.status(400).json({ error: "Faltan datos o el archivo de audio" });
+      }
+
+      const mensaje = await ChatService.enviarMensajeAudio({
+        conversacionId,
+        remitenteId,
+        nombreArchivo: req.file.filename,
+      });
+
+      res.status(201).json(mensaje);
+    } catch (error) {
+      console.error("Error enviando audio:", error);
       res.status(400).json({ error: error.message });
     }
   }
