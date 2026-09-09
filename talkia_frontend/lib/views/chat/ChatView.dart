@@ -5,14 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/chat_viewmodel.dart';
 import '../../viewmodels/auth_viewmodel.dart';
+import 'DiccionarioView.dart';
 
 class ChatView extends StatefulWidget {
   final String conversacionId;
+  final String otroUsuarioId;
   final String otroUsuarioNombre;
 
   const ChatView({
     super.key,
     required this.conversacionId,
+    required this.otroUsuarioId,
     required this.otroUsuarioNombre,
   });
 
@@ -110,11 +113,9 @@ class _ChatViewState extends State<ChatView> {
     }
 
     return Scaffold(
-
       backgroundColor: const Color(0xFFF8F9FA),
-      
+
       appBar: AppBar(
-        
         title: Text(
           widget.otroUsuarioNombre,
           style: const TextStyle(
@@ -135,15 +136,30 @@ class _ChatViewState extends State<ChatView> {
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(999),
             ),
-            child: const Icon(
-              Icons.translate,
-              size: 20,
-              color: Color(0xFF4F46E5),
+            child: IconButton(
+              icon: const Icon(
+                Icons.menu_book_outlined,
+                size: 20,
+                color: Color(0xFF4F46E5),
+              ),
+              tooltip: 'Diccionario personalizado',
+              onPressed: () {
+                final auth = context.read<AuthViewModel>();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DiccionarioView(
+                      usuarioId: auth.usuario!.id!,
+                      contactoId: widget.otroUsuarioId,
+                      contactoNombre: widget.otroUsuarioNombre,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -175,7 +191,9 @@ class _ChatViewState extends State<ChatView> {
                           "Envía un mensaje para empezar",
                           style: TextStyle(
                             fontSize: 14,
-                            color: const Color(0xFF52525B).withValues(alpha: 0.6),
+                            color: const Color(
+                              0xFF52525B,
+                            ).withValues(alpha: 0.6),
                             fontWeight: FontWeight.w400,
                           ),
                         ),
@@ -207,7 +225,8 @@ class _ChatViewState extends State<ChatView> {
                               : Alignment.centerLeft,
                           child: Container(
                             constraints: BoxConstraints(
-                              maxWidth: MediaQuery.of(context).size.width * 0.75,
+                              maxWidth:
+                                  MediaQuery.of(context).size.width * 0.75,
                             ),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,

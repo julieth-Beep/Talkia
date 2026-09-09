@@ -54,6 +54,7 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
       MaterialPageRoute(
         builder: (context) => ChatView(
           conversacionId: conversacion.id,
+          otroUsuarioId: otroUsuario.id!,
           otroUsuarioNombre: otroUsuario.nombre,
         ),
       ),
