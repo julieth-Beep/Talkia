@@ -7,6 +7,7 @@ const usuarioRoutes = require("./src/routes/usuarioRoutes");
 const chatRoutes = require("./src/routes/chatRoutes");
 const traduccionRoutes = require("./src/routes/traduccionRoutes");
 const diccionarioRoutes = require("./src/routes/diccionarioRoutes");
+const adminRoutes = require("./src/routes/adminRoutes");
 
 const app = express();
 app.use(cors());
@@ -24,6 +25,7 @@ app.get("/", (req, res) => {
 app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/diccionario", diccionarioRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Escucha en todas las interfaces (0.0.0.0)
 app.listen(PORT, '0.0.0.0', () => {

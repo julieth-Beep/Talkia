@@ -9,7 +9,7 @@ class DiccionarioService {
     if (kIsWeb) {
       return "http://localhost:3000/api/diccionario";
     } else if (Platform.isAndroid) {
-      return "http://192.168.0.163:3000/api/diccionario"; // tu IP local actual
+      return "http://10.0.2.2:3000/api/diccionario"; // tu IP local actual
     } else {
       return "http://localhost:3000/api/diccionario";
     }

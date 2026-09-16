@@ -41,16 +41,21 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  String? _token;
+  String? get token => _token;
+
   Future<bool> iniciarSesion({
     required String correo,
     required String password,
   }) async {
     _setLoading(true);
     try {
-      _usuario = await UsuarioService.iniciarSesion(
+      final resultado = await UsuarioService.iniciarSesion(
         correo: correo,
         password: password,
       );
+      _usuario = resultado["usuario"];
+      _token = resultado["token"];
       _setLoading(false);
       return true;
     } catch (e) {
@@ -164,7 +169,9 @@ class AuthViewModel extends ChangeNotifier {
         throw Exception("No se pudo obtener el token de Google.");
       }
 
-      _usuario = await UsuarioService.loginConGoogle(idToken: idToken);
+      final resultado = await UsuarioService.loginConGoogle(idToken: idToken);
+      _usuario = resultado["usuario"];
+      _token = resultado["token"];
       _setLoading(false);
       notifyListeners();
     } catch (e) {

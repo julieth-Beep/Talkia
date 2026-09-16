@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'views/auth/login_view.dart';
 import 'viewmodels/auth_viewmodel.dart'; 
 import 'viewmodels/chat_viewmodel.dart';
+import 'viewmodels/admin_viewmodel.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +19,7 @@ class TalkiaApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (context) => AuthViewModel()),
         ChangeNotifierProvider(create: (context) => ChatViewModel()),
+        ChangeNotifierProvider(create: (_) => AdminViewModel()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

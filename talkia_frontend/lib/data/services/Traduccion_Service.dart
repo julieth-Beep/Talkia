@@ -8,7 +8,7 @@ class TraduccionService {
     if (kIsWeb) {
       return "http://localhost:3000/api/traduccion";
     } else if (Platform.isAndroid) {
-      return "http://192.168.0.163:3000/api/traduccion"; // tu IP local
+      return "http://10.0.2.2:3000/api/traduccion"; // tu IP local
     } else {
       return "http://localhost:3000/api/traduccion";
     }

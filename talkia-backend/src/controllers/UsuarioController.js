@@ -13,9 +13,9 @@ class UsuarioController {
 
   static async iniciarSesion(req, res) {
     try {
-      const usuario = await UsuarioService.iniciarSesion(req.body);
+      const { usuario, token } = await UsuarioService.iniciarSesion(req.body);
       const { contraseña, ref, ...usuarioSinPassword } = usuario;
-      res.status(200).json(usuarioSinPassword);
+      res.status(200).json({ ...usuarioSinPassword, token });
     } catch (error) {
       res.status(401).json({ error: error.message });
     }
@@ -37,9 +37,9 @@ class UsuarioController {
       const { idToken } = req.body;
       if (!idToken) throw new Error("Falta el token de Google.");
 
-      const usuario = await UsuarioService.loginConGoogle(idToken);
+      const { usuario, token } = await UsuarioService.loginConGoogle(idToken);
       const { contraseña, ref, ...usuarioSinPassword } = usuario;
-      res.status(200).json(usuarioSinPassword);
+      res.status(200).json({ ...usuarioSinPassword, token });
     } catch (error) {
       res.status(401).json({ error: error.message });
     }

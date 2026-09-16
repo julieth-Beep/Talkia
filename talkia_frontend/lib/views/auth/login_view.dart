@@ -7,6 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../home/InicioIngreso.dart';
 import 'recuperarContraseña_view.dart';
 import 'google_web_button.dart';
+import '../admin/AdminHomeView.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -40,9 +41,15 @@ class _LoginViewState extends State<LoginView> {
     if (_yaNavego || !mounted) return;
     _yaNavego = true;
 
+    // El rol viene en el usuario devuelto por el login
+    final esAdmin = context.read<AuthViewModel>().usuario?.rol == "admin";
+
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const InicioIngresoView()),
+      MaterialPageRoute(
+        builder: (context) =>
+            esAdmin ? const AdminHomeView() : const InicioIngresoView(),
+      ),
     );
   }
 
@@ -87,7 +94,11 @@ class _LoginViewState extends State<LoginView> {
     }
   }
 
-  InputDecoration _buildInputDecoration(String hintText, IconData icon, {bool isPassword = false}) {
+  InputDecoration _buildInputDecoration(
+    String hintText,
+    IconData icon, {
+    bool isPassword = false,
+  }) {
     return InputDecoration(
       hintText: hintText,
       hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
@@ -152,20 +163,32 @@ class _LoginViewState extends State<LoginView> {
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.public, size: 40, color: Color(0xFF006677)),
+                  child: const Icon(
+                    Icons.public,
+                    size: 40,
+                    color: Color(0xFF006677),
+                  ),
                 ),
 
                 const SizedBox(height: 32),
 
                 const Text(
                   'Bienvenido de nuevo',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0F172A),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 const Text(
                   'Ingresa a tu cuenta de\nTalkia.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: Color(0xFF64748B), height: 1.5),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF64748B),
+                    height: 1.5,
+                  ),
                 ),
 
                 const SizedBox(height: 48),
@@ -174,9 +197,13 @@ class _LoginViewState extends State<LoginView> {
                 TextFormField(
                   controller: _correoController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: _buildInputDecoration('tu@correo.com', Icons.email_outlined),
+                  decoration: _buildInputDecoration(
+                    'tu@correo.com',
+                    Icons.email_outlined,
+                  ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Ingresa tu correo';
+                    if (value == null || value.isEmpty)
+                      return 'Ingresa tu correo';
                     if (!value.contains('@')) return 'Correo no válido';
                     return null;
                   },
@@ -199,10 +226,12 @@ class _LoginViewState extends State<LoginView> {
                     TextButton(
                       onPressed: () {
                         Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ForgotPasswordScreen(),
+                          ),
                         );
-                      }, 
+                      },
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.zero,
                         minimumSize: Size.zero,
@@ -225,8 +254,14 @@ class _LoginViewState extends State<LoginView> {
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
-                  decoration: _buildInputDecoration('........', Icons.lock_outline, isPassword: true),
-                  validator: (value) => value != null && value.isEmpty ? 'Ingresa tu contraseña' : null,
+                  decoration: _buildInputDecoration(
+                    '........',
+                    Icons.lock_outline,
+                    isPassword: true,
+                  ),
+                  validator: (value) => value != null && value.isEmpty
+                      ? 'Ingresa tu contraseña'
+                      : null,
                 ),
 
                 const SizedBox(height: 40),
@@ -240,13 +275,23 @@ class _LoginViewState extends State<LoginView> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF006677),
                       foregroundColor: Colors.white,
-                      disabledBackgroundColor: const Color(0xFF006677).withOpacity(0.6),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      disabledBackgroundColor: const Color(
+                        0xFF006677,
+                      ).withOpacity(0.6),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       elevation: 0,
                     ),
                     child: isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('Iniciar sesión', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                        : const Text(
+                            'Iniciar sesión',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                   ),
                 ),
 
@@ -258,7 +303,12 @@ class _LoginViewState extends State<LoginView> {
                     const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('o', style: TextStyle(color: const Color(0xFF64748B).withOpacity(0.7))),
+                      child: Text(
+                        'o',
+                        style: TextStyle(
+                          color: const Color(0xFF64748B).withOpacity(0.7),
+                        ),
+                      ),
                     ),
                     const Expanded(child: Divider(color: Color(0xFFE2E8F0))),
                   ],
@@ -277,11 +327,17 @@ class _LoginViewState extends State<LoginView> {
                           icon: const Icon(Icons.g_mobiledata, size: 24),
                           label: const Text(
                             'Continuar con Google',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF0F172A),
+                            ),
                           ),
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: Color(0xFFE2E8F0)),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
                       ),
@@ -300,12 +356,18 @@ class _LoginViewState extends State<LoginView> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const RegistroView()),
+                          MaterialPageRoute(
+                            builder: (context) => const RegistroView(),
+                          ),
                         );
                       },
                       child: const Text(
                         'Regístrate',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF006677)),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF006677),
+                        ),
                       ),
                     ),
                   ],

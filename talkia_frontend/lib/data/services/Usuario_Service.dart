@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import '../models/Usuario_Model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UsuarioService {
   // Detecta automáticamente la URL correcta según dónde se está ejecutando la app
@@ -21,6 +22,12 @@ class UsuarioService {
       // Windows, macOS, Linux (desktop)
       return "http://localhost:3000/api/usuarios";
     }
+  }
+
+  // Lo usan los demás servicios (Chat, Traducción, Admin) para mandar el header
+  static Future<String?> obtenerToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString("token");
   }
 
   static Future<UsuarioModel> registrar({
@@ -49,7 +56,7 @@ class UsuarioService {
     }
   }
 
-  static Future<UsuarioModel> iniciarSesion({
+  static Future<Map<String, dynamic>> iniciarSesion({
     required String correo,
     required String password,
   }) async {
@@ -62,7 +69,11 @@ class UsuarioService {
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      return UsuarioModel.fromJson(data);
+      // Guarda el token en el dispositivo para futuras peticiones
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString("token", data["token"]);
+
+      return {"usuario": UsuarioModel.fromJson(data), "token": data["token"]};
     } else {
       throw Exception(data["error"] ?? "Credenciales incorrectas");
     }
@@ -99,7 +110,9 @@ class UsuarioService {
     }
   }
 
-  static Future<UsuarioModel> loginConGoogle({required String idToken}) async {
+  static Future<Map<String, dynamic>> loginConGoogle({
+    required String idToken,
+  }) async {
     final response = await http.post(
       Uri.parse("$baseUrl/google"),
       headers: {"Content-Type": "application/json"},
@@ -109,7 +122,11 @@ class UsuarioService {
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
-      return UsuarioModel.fromJson(data);
+      // Guarda el token igual que en iniciarSesion
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString("token", data["token"]);
+
+      return {"usuario": UsuarioModel.fromJson(data), "token": data["token"]};
     } else {
       throw Exception(data["error"] ?? "Error al iniciar sesión con Google");
     }

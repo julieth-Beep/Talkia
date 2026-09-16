@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const Usuario = require("../models/Usuario");
 const UsuarioRepository = require("../repositories/UsuarioRepository");
@@ -9,6 +10,16 @@ const EmailService = require("./EmailService");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 class UsuarioService {
+
+  // ─── GENERAR TOKEN JWT ──────────────────────────────────
+  static generarToken(usuario) {
+    return jwt.sign(
+      { uid: usuario.id, rol: usuario.rol || "usuario" },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+  }
+
   // ─── REGISTRO ───────────────────────────────────────────
   static async registrar({ correo, password, nombre, apellido, idiomaPredeterminado }) {
     if (!password || password.length < 8) {
@@ -60,7 +71,10 @@ class UsuarioService {
     }
 
     await UsuarioRepository.actualizar(usuario.ref, { intentosFallidos: 0 });
-    return usuario;
+    return {
+      usuario,
+      token: UsuarioService.generarToken(usuario),
+    };
   }
 
   // ─── COMPLETAR PERFIL ───────────────────────────────────
@@ -105,7 +119,10 @@ class UsuarioService {
       if (usuario.estado === "bloqueado") {
         throw new Error("Cuenta bloqueada por múltiples intentos fallidos.");
       }
-      return usuario;
+      return {
+        usuario,
+        token: UsuarioService.generarToken(usuario)
+      };
     }
 
     // 3. Si no existe, lo creamos automáticamente con los datos de Google
@@ -118,7 +135,11 @@ class UsuarioService {
       proveedor: "google",
     });
 
-    return await UsuarioRepository.guardar(nuevoUsuario);
+    const nuevoUsuarioGuardado = await UsuarioRepository.guardar(nuevoUsuario);
+    return {
+      usuario: nuevoUsuarioGuardado,
+      token: UsuarioService.generarToken(nuevoUsuarioGuardado),
+    };
   }
 
   // ─── SOLICITAR RECUPERACIÓN ─────────────────────────────
