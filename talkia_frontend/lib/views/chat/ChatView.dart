@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../viewmodels/chat_viewmodel.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import 'DiccionarioView.dart';
+import '../../data/services/VideoCall_Service.dart';
 
 class ChatView extends StatefulWidget {
   final String conversacionId;
@@ -27,6 +28,7 @@ class _ChatViewState extends State<ChatView> {
   final TextEditingController _mensajeController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _enviando = false;
+  bool _conectandoLlamada = false;
   int _cantidadMensajesAnterior = 0;
 
   @override
@@ -101,6 +103,27 @@ class _ChatViewState extends State<ChatView> {
     _scrollAlFinal();
   }
 
+  Future<void> _videollamada() async {
+    if (_conectandoLlamada) return;
+    final user = context.read<AuthViewModel>().usuario;
+    if (user == null) return;
+    setState(() => _conectandoLlamada = true);
+    try {
+      await VideoCallService.iniciarLlamada(
+        conversacionId: widget.conversacionId,
+        nombreUsuario: user.nombre,
+        correoUsuario: user.correo,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("No se pudo iniciar la videollamada: $e")),
+      );
+    } finally {
+      if (mounted) setState(() => _conectandoLlamada = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final chatVM = context.watch<ChatViewModel>();
@@ -134,6 +157,17 @@ class _ChatViewState extends State<ChatView> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
+          IconButton(
+            onPressed: _conectandoLlamada ? null : _videollamada,
+            tooltip: "Videollamada",
+            icon: _conectandoLlamada
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.videocam_outlined, color: Color(0xFF006677)),
+          ),
           Container(
             margin: const EdgeInsets.only(right: 16),
             decoration: BoxDecoration(

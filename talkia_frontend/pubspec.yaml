@@ -41,6 +41,9 @@ dependencies:
   just_audio: ^0.10.6 
   path_provider: ^2.1.6
   shared_preferences: ^2.5.5
+  flutter_local_notifications: ^18.0.1
+  jitsi_meet_flutter_sdk: ^11.2.0
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

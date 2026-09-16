@@ -2,6 +2,23 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Talkia necesita la cámara para las videollamadas.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Talkia necesita el micrófono para llamadas y mensajes de voz.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Talkia necesita acceso a tus fotos para poder cambiar tu foto de perfil.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- Igual que con Android (ver network_security_config.xml): el paquete
+		     http de Dart no respeta App Transport Security en iOS, pero
+		     AVPlayer (usado por just_audio para reproducir) SÍ lo exige de
+		     forma estricta. Sin esto, enviar audio funciona pero reproducirlo
+		     falla en silencio porque AVPlayer rechaza la conexión http:// al
+		     backend. -->
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
