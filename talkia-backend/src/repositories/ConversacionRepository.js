@@ -16,21 +16,21 @@ class ConversacionRepository {
     return { id: docRef.id, ...nuevaConv };
   }
 
-  // Buscar conversación entre dos usuarios
-  static async obtenerConversacionEntre(uid1, uid2) {
-    const snapshot = await db
-      .collection("conversaciones")
-      .where("participantes", "array-contains", uid1)
-      .where("tipo", "==", "individual")
-      .get();
+  // Crear conversación GRUPAL
+  static async crearGrupo({ nombre, creadorId, participantes }) {
+    const nuevaConv = {
+      participantes: participantes, // incluye al creador
+      tipo: "grupal",
+      nombre: nombre,
+      creadorId: creadorId,
+      fechaCreacion: new Date().toISOString(),
+      fechaActualizacion: new Date().toISOString(),
+      ultimoMensaje: "",
+      ultimoMensajeTraducido: {},
+    };
 
-    for (const doc of snapshot.docs) {
-      const data = doc.data();
-      if (data.participantes.includes(uid2) && data.participantes.length === 2) {
-        return { id: doc.id, ...data };
-      }
-    }
-    return null;
+    const docRef = await db.collection("conversaciones").add(nuevaConv);
+    return { id: docRef.id, ...nuevaConv };
   }
 
   // Obtener todas las conversaciones de un usuario
@@ -38,11 +38,18 @@ class ConversacionRepository {
     const snapshot = await db
       .collection("conversaciones")
       .where("participantes", "array-contains", uid)
-      .orderBy("fechaActualizacion", "desc")
       .get();
 
     if (snapshot.empty) return [];
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    const conversaciones = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Ordenar en memoria (evita índice compuesto)
+    conversaciones.sort((a, b) =>
+      (b.fechaActualizacion || "").localeCompare(a.fechaActualizacion || "")
+    );
+
+    return conversaciones;
   }
 
   // Actualizar el último mensaje de una conversación
@@ -59,6 +66,27 @@ class ConversacionRepository {
     const doc = await db.collection("conversaciones").doc(id).get();
     if (!doc.exists) return null;
     return { id: doc.id, ...doc.data() };
+  }
+
+  // Buscar conversación 1 a 1 entre dos usuarios
+  static async obtenerConversacionEntre(uid1, uid2) {
+    const snapshot = await db
+      .collection("conversaciones")
+      .where("participantes", "array-contains", uid1)
+      .where("tipo", "==", "individual")
+      .get();
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      if (data.participantes.includes(uid2) && data.participantes.length === 2) {
+        return { id: doc.id, ...data };
+      }
+    }
+    return null;
+  }
+
+  static async eliminar(id) {
+    await db.collection("conversaciones").doc(id).delete();
   }
 }
 

@@ -7,6 +7,7 @@ class Usuario {
     username = "",
     idiomaPredeterminado = "Español",
     foto_url = "",
+    info = "Disponible", 
     rol = "usuario",
     estado = "activo",
     intentosFallidos = 0,
@@ -20,6 +21,7 @@ class Usuario {
     this.username = username && username.trim() !== "" ? username : `${nombre} ${apellido}`.trim();
     this.foto_url = foto_url;
     this.idiomaPredeterminado = idiomaPredeterminado;
+    this.info = info; 
     this.rol = rol;
     this.estado = estado;
     this.intentosFallidos = intentosFallidos;

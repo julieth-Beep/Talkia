@@ -74,6 +74,46 @@ class UsuarioController {
       res.status(400).json({ error: error.message });
     }
   }
+
+  static async actualizarFotoPerfil(req, res) {
+    try {
+      const { id } = req.params;
+
+      if (!req.file) {
+        return res.status(400).json({ error: "No se recibió ninguna imagen" });
+      }
+
+      const usuario = await UsuarioService.actualizarFotoPerfil(id, req.file.filename);
+      const { contraseña, ...usuarioSinPassword } = usuario;
+      res.status(200).json(usuarioSinPassword);
+    } catch (error) {
+      console.error("Error actualizando foto:", error);
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  static async actualizarDatosPersonales(req, res) {
+    try {
+      const { id } = req.params;
+      const usuario = await UsuarioService.actualizarDatosPersonales(id, req.body);
+      const { contraseña, ref, ...usuarioSinPassword } = usuario;
+      res.status(200).json(usuarioSinPassword);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  static async actualizarInfo(req, res) {
+    try {
+      const { id } = req.params;
+      const { info } = req.body;
+      const usuario = await UsuarioService.actualizarInfo(id, info);
+      const { contraseña, ref, ...usuarioSinPassword } = usuario;
+      res.status(200).json(usuarioSinPassword);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
 }
 
 module.exports = UsuarioController;

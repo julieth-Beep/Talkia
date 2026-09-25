@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io' show Platform;
+import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import '../models/Usuario_Model.dart';
@@ -183,6 +184,72 @@ class UsuarioService {
       return List<UsuarioModel>.from(data.map((u) => UsuarioModel.fromJson(u)));
     } else {
       throw Exception(data["error"] ?? "Error al listar usuarios");
+    }
+  }
+
+  static Future<UsuarioModel> actualizarFotoPerfil({
+    required String usuarioId,
+    required File foto,
+  }) async {
+    final request = http.MultipartRequest(
+      "PATCH",
+      Uri.parse("$baseUrl/$usuarioId/foto"),
+    );
+    request.files.add(await http.MultipartFile.fromPath("foto", foto.path));
+
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString();
+    final data = jsonDecode(responseBody);
+
+    if (response.statusCode == 200) {
+      return UsuarioModel.fromJson(data);
+    } else {
+      throw Exception(data["error"] ?? "Error al actualizar foto de perfil");
+    }
+  }
+
+  static Future<UsuarioModel> actualizarDatosPersonales({
+    required String usuarioId,
+    String? nombre,
+    String? apellido,
+    String? correo,
+  }) async {
+    final body = <String, dynamic>{};
+    if (nombre != null) body['nombre'] = nombre;
+    if (apellido != null) body['apellido'] = apellido;
+    if (correo != null) body['correo'] = correo;
+
+    final response = await http.patch(
+      Uri.parse("$baseUrl/$usuarioId/datos"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(body),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return UsuarioModel.fromJson(data);
+    } else {
+      throw Exception(data["error"] ?? "Error al actualizar datos");
+    }
+  }
+
+  static Future<UsuarioModel> actualizarInfo({
+    required String usuarioId,
+    required String info,
+  }) async {
+    final response = await http.patch(
+      Uri.parse("$baseUrl/$usuarioId/info"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"info": info}),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return UsuarioModel.fromJson(data);
+    } else {
+      throw Exception(data["error"] ?? "Error al actualizar info");
     }
   }
 }

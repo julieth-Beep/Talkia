@@ -6,6 +6,7 @@ class UsuarioModel {
   final String username;
   final String fotoUrl;
   final String idiomaPredeterminado;
+  final String info; 
   final String rol;
   final String estado;
 
@@ -17,6 +18,7 @@ class UsuarioModel {
     this.username = "",
     this.fotoUrl = "",
     this.idiomaPredeterminado = "Español",
+    this.info = 'Disponible',
     this.rol = "usuario",
     this.estado = "activo",
   });
@@ -30,6 +32,7 @@ class UsuarioModel {
       username: json['username'] ?? "",
       fotoUrl: json['foto_url'] ?? "",
       idiomaPredeterminado: json['idiomaPredeterminado'] ?? "Español",
+      info: json['info'] ?? 'Disponible',
       rol: json['rol'] ?? "usuario",
       estado: json['estado'] ?? "activo",
     );

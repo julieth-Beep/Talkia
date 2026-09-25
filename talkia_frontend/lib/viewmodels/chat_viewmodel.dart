@@ -59,7 +59,7 @@ class ChatViewModel extends ChangeNotifier {
   Future<void> _cargarMensajes(String conversacionId) async {
     try {
       final nuevos = await ChatService.obtenerMensajes(conversacionId);
-      
+
       // ✅ CAMBIO 2: Solo notifica si realmente cambió algo (ahorra rebuilds y lecturas)
       if (_hayCambios(nuevos)) {
         _mensajes = nuevos;
@@ -68,7 +68,8 @@ class ChatViewModel extends ChangeNotifier {
     } catch (e) {
       final errorStr = e.toString();
       // ✅ CAMBIO 3: Detecta error de cuota y detiene el polling para no seguir gastando
-      if (errorStr.contains('RESOURCE_EXHAUSTED') || errorStr.contains('Quota exceeded')) {
+      if (errorStr.contains('RESOURCE_EXHAUSTED') ||
+          errorStr.contains('Quota exceeded')) {
         debugPrint("🚫 Cuota de Firestore agotada. Polling pausado.");
         _errorMessage = "Límite de uso diario alcanzado. Intenta mañana.";
         notifyListeners();
@@ -174,6 +175,26 @@ class ChatViewModel extends ChangeNotifier {
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<ConversacionModel?> crearGrupo({
+    required String creadorId,
+    required String nombre,
+    required List<String> participantes,
+  }) async {
+    _setLoading(true);
+    try {
+      final grupo = await ChatService.crearGrupo(
+        nombre: nombre,
+        creadorId: creadorId,
+        participantes: participantes,
+      );
+      _setLoading(false);
+      return grupo;
+    } catch (e) {
+      _setError(e.toString().replaceFirst('Exception: ', ''));
+      return null;
     }
   }
 }

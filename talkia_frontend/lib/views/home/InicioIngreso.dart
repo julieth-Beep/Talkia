@@ -2,7 +2,11 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../chat/ListaConversacionesView.dart';
+import '../../views/perfil/Configuracion.dart';
 import '../../data/services/Traduccion_Service.dart';
+import 'package:provider/provider.dart';
+import '../../viewmodels/auth_viewmodel.dart';
+import '../auth/login_view.dart';
 
 class InicioIngresoView extends StatefulWidget {
   const InicioIngresoView({super.key});
@@ -50,6 +54,52 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
     });
   }
 
+  Future<void> _cerrarSesion() async {
+    // Cerrar el menú primero
+    setState(() => _showProfileMenu = false);
+
+    // Confirmar con el usuario
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text("Cerrar sesión"),
+        content: const Text("¿Estás seguro que quieres cerrar sesión?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text("Cancelar"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFBA1A1A),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text("Cerrar sesión"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmado != true) return;
+    if (!mounted) return;
+
+    // Cerrar sesión en el ViewModel
+    await context.read<AuthViewModel>().cerrarSesion();
+
+    if (!mounted) return;
+
+    // Navegar al login y limpiar todo el stack
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const LoginView()),
+      (route) => false,
+    );
+  }
+
   void _swapLanguages() {
     setState(() {
       final temp = _sourceLang;
@@ -89,9 +139,9 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _traduciendo = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al traducir: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al traducir: $e')));
     }
   }
 
@@ -300,23 +350,30 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
           ),
           child: Column(
             children: [
-              _configMenuItem(Icons.edit, 'Editar Perfil', () {
+              _profileMenuItem(Icons.edit_outlined, 'Perfil', () {
                 setState(() => _showConfigMenu = false);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ConfigView()),
+                );
               }),
-              _configMenuItem(Icons.settings, 'Configuración', () {
-                setState(() => _showConfigMenu = false);
+              _profileMenuItem(Icons.settings_outlined, 'Configuración', () {
+                setState(() => _showProfileMenu = false);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ConfigView()),
+                );
               }),
-              _configMenuItem(Icons.history, 'Historial', () {
-                setState(() => _showConfigMenu = false);
+              _profileMenuItem(Icons.history_outlined, 'Mi Historial', () {
+                setState(() => _showProfileMenu = false);
               }),
-              Container(
-                height: 1,
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                color: const Color(0xFFD4D4D8).withValues(alpha: 0.3),
-              ),
-              _configMenuItem(Icons.help_outline, 'Ayuda', () {
-                setState(() => _showConfigMenu = false);
+              _profileMenuItem(Icons.help_outline, 'Ayuda y Soporte', () {
+                setState(() => _showProfileMenu = false);
               }),
+              const Divider(height: 1, color: Color(0xFFF4F4F5)),
+              _profileMenuItem(Icons.logout, 'Cerrar Sesión', () {
+                _cerrarSesion();
+              }, isDestructive: true),
             ],
           ),
         ),
@@ -352,99 +409,7 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
     return Positioned(
       bottom: 80 + MediaQuery.of(context).padding.bottom,
       right: 16,
-      child: GestureDetector(
-        onTap: () {},
-        child: Container(
-          width: 240,
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFFFFF),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: const Color(0xFFD4D4D8).withValues(alpha: 0.2),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 20,
-                offset: const Offset(0, -4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.person,
-                        color: Color(0xFF4F46E5),
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Mi Usuario',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF1A1A1C),
-                            ),
-                          ),
-                          Text(
-                            'usuario@email.com',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: const Color(
-                                0xFF52525B,
-                              ).withValues(alpha: 0.7),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1, color: Color(0xFFF4F4F5)),
-              _profileMenuItem(Icons.edit_outlined, 'Editar Perfil', () {
-                setState(() => _showProfileMenu = false);
-              }),
-              _profileMenuItem(Icons.settings_outlined, 'Configuración', () {
-                setState(() => _showProfileMenu = false);
-              }),
-              _profileMenuItem(Icons.history_outlined, 'Mi Historial', () {
-                setState(() => _showProfileMenu = false);
-              }),
-              _profileMenuItem(Icons.help_outline, 'Ayuda y Soporte', () {
-                setState(() => _showProfileMenu = false);
-              }),
-              const Divider(height: 1, color: Color(0xFFF4F4F5)),
-              _profileMenuItem(Icons.logout, 'Cerrar Sesión', () {
-                setState(() => _showProfileMenu = false);
-                // TODO: Implementar cerrar sesión
-              }, isDestructive: true),
-            ],
-          ),
-        ),
-      ),
+      child: GestureDetector(),
     );
   }
 
@@ -649,7 +614,11 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                           ),
                         ),
                         SizedBox(width: 8),
-                        Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                        Icon(
+                          Icons.arrow_forward,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ],
                     ),
             ),
@@ -892,11 +861,12 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                 ),
                 GestureDetector(
                   onTap: () {
-                    setState(() {
-                      _showConfigMenu = false;
-                      _showProfileMenu = !_showProfileMenu;
-                      _currentIndex = 2;
-                    });
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ConfigView(),
+                      ),
+                    );
                   },
                   child: Column(
                     mainAxisSize: MainAxisSize.min,

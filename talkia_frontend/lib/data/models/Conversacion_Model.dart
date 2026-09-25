@@ -7,6 +7,11 @@ class ConversacionModel {
   final String? ultimoMensaje;
   final Map<String, String>? ultimoMensajeTraducido;
   final Map<String, dynamic>? contacto;
+  final String? nombre;
+  final bool esGrupo;
+  final int? cantidadMiembros;
+  final String? nombreMostrar;  
+  final bool esContacto;         
 
   ConversacionModel({
     required this.id,
@@ -17,6 +22,11 @@ class ConversacionModel {
     this.ultimoMensaje,
     this.ultimoMensajeTraducido,
     this.contacto,
+    this.nombre,
+    this.esGrupo = false,
+    this.cantidadMiembros,
+    this.nombreMostrar,        
+    this.esContacto = false,   
   });
 
   factory ConversacionModel.fromJson(Map<String, dynamic> json) {
@@ -31,6 +41,11 @@ class ConversacionModel {
           ? Map<String, String>.from(json['ultimoMensajeTraducido'])
           : null,
       contacto: json['contacto'],
+      nombre: json['nombre'],
+      esGrupo: json['tipo'] == 'grupal',
+      cantidadMiembros: json['cantidadMiembros'],
+      nombreMostrar: json['nombreMostrar'],        
+      esContacto: json['esContacto'] ?? false,      
     );
   }
 }

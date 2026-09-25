@@ -1,23 +1,32 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'audio_recorder_widget.dart';
 import 'audio_player_bubble.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/chat_viewmodel.dart';
 import '../../viewmodels/auth_viewmodel.dart';
+import '../../data/services/Contacto_Service.dart';
 import 'DiccionarioView.dart';
 import '../../data/services/VideoCall_Service.dart';
+import '../../data/services/Chat_Service.dart';
+import 'DetallesContactoView.dart';
+import 'DetallesGrupoView.dart';
 
 class ChatView extends StatefulWidget {
   final String conversacionId;
-  final String otroUsuarioId;
-  final String otroUsuarioNombre;
+  final String? otroUsuarioId;
+  final String? otroUsuarioNombre;
+  final String? titulo;
+  final bool esGrupo;
 
   const ChatView({
     super.key,
     required this.conversacionId,
-    required this.otroUsuarioId,
-    required this.otroUsuarioNombre,
+    this.otroUsuarioId,
+    this.otroUsuarioNombre,
+    this.titulo,
+    this.esGrupo = false,
   });
 
   @override
@@ -31,6 +40,9 @@ class _ChatViewState extends State<ChatView> {
   bool _conectandoLlamada = false;
   int _cantidadMensajesAnterior = 0;
 
+  String? _nombreMostrar;
+  String? _fotoMostrar;
+
   @override
   void initState() {
     super.initState();
@@ -41,12 +53,61 @@ class _ChatViewState extends State<ChatView> {
         "🔄 Iniciando escucha para conversación: ${widget.conversacionId}",
       );
       chatVM.iniciarEscuchaMensajes(widget.conversacionId);
+
+      // 👈 Si es chat 1 a 1, consultar el nombre y foto
+      if (!widget.esGrupo && widget.otroUsuarioId != null) {
+        _cargarDatosAMostrar();
+      }
     });
+  }
+
+  // 👈 Helper para completar la URL de la foto
+  String _completarUrl(String url) {
+    if (url.isEmpty) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/')) {
+      if (kIsWeb) return "http://localhost:3000$url";
+      if (Platform.isAndroid) return "http://10.0.2.2:3000$url";
+      return "http://localhost:3000$url";
+    }
+    return url;
+  }
+
+  // 👈 Consulta el nombre y la foto al backend
+  Future<void> _cargarDatosAMostrar() async {
+    final auth = context.read<AuthViewModel>();
+    if (auth.usuario?.id == null || widget.otroUsuarioId == null) return;
+
+    try {
+      final resultado = await ContactoService.obtenerDatosAMostrar(
+        duenoId: auth.usuario!.id!,
+        contactoId: widget.otroUsuarioId!,
+      );
+      if (!mounted) return;
+      setState(() {
+        _nombreMostrar = (resultado['nombre'] ?? '').isNotEmpty
+            ? resultado['nombre']
+            : widget.otroUsuarioNombre;
+        _fotoMostrar = resultado['foto'] ?? '';
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _nombreMostrar = widget.otroUsuarioNombre;
+      });
+    }
   }
 
   @override
   void dispose() {
-    context.read<ChatViewModel>().detenerEscuchaMensajes();
+    final chatVM = context.read<ChatViewModel>();
+
+    // Si no hay mensajes, eliminar la conversación
+    if (chatVM.mensajes.isEmpty && !widget.esGrupo) {
+      ChatService.eliminarConversacionSiEstaVacia(widget.conversacionId);
+    }
+
+    chatVM.detenerEscuchaMensajes();
     _mensajeController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -124,6 +185,62 @@ class _ChatViewState extends State<ChatView> {
     }
   }
 
+  // ═══════════════════════════════════════════════════════
+  //  AVATAR DEL CHAT (GRUPO O USUARIO)
+  // ═══════════════════════════════════════════════════════
+  Widget _buildAvatarChat() {
+    // Si es grupo → ícono de grupo
+    if (widget.esGrupo) {
+      return Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.group, color: Color(0xFF4F46E5), size: 22),
+      );
+    }
+
+    // Si es chat 1 a 1 → foto o inicial
+    final fotoUrl = _completarUrl(_fotoMostrar ?? '');
+
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+        shape: BoxShape.circle,
+      ),
+      child: ClipOval(
+        child: fotoUrl.isNotEmpty
+            ? Image.network(
+                fotoUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _avatarInicial(),
+              )
+            : _avatarInicial(),
+      ),
+    );
+  }
+
+  Widget _avatarInicial() {
+    final nombre = _nombreMostrar ?? widget.otroUsuarioNombre ?? 'U';
+    return Container(
+      color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+      child: Center(
+        child: Text(
+          nombre.isNotEmpty ? nombre[0].toUpperCase() : '?',
+          style: const TextStyle(
+            color: Color(0xFF4F46E5),
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final chatVM = context.watch<ChatViewModel>();
@@ -135,19 +252,14 @@ class _ChatViewState extends State<ChatView> {
       _scrollAlFinal();
     }
 
+    // Título según tipo + nombre personalizado
+    final tituloChat = widget.esGrupo
+        ? (widget.titulo ?? "Grupo")
+        : (_nombreMostrar ?? widget.otroUsuarioNombre ?? "Chat");
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-
       appBar: AppBar(
-        title: Text(
-          widget.otroUsuarioNombre,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A1C),
-            letterSpacing: -0.5,
-          ),
-        ),
         backgroundColor: const Color(0xFFF8F9FA).withValues(alpha: 0.8),
         elevation: 0,
         foregroundColor: const Color(0xFF1A1A1C),
@@ -156,10 +268,33 @@ class _ChatViewState extends State<ChatView> {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1C)),
           onPressed: () => Navigator.pop(context),
         ),
+        // 👈 TÍTULO CLICKEABLE: AVATAR + NOMBRE
+        title: InkWell(
+          onTap: _abrirDetalles,
+          child: Row(
+            children: [
+              _buildAvatarChat(),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  tituloChat,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1A1A1C),
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
         actions: [
           IconButton(
             onPressed: _conectandoLlamada ? null : _videollamada,
-            tooltip: "Videollamada",
+            tooltip: widget.esGrupo ? "Videollamada grupal" : "Videollamada",
             icon: _conectandoLlamada
                 ? const SizedBox(
                     width: 20,
@@ -168,34 +303,38 @@ class _ChatViewState extends State<ChatView> {
                   )
                 : const Icon(Icons.videocam_outlined, color: Color(0xFF006677)),
           ),
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: IconButton(
-              icon: const Icon(
-                Icons.menu_book_outlined,
-                size: 20,
-                color: Color(0xFF4F46E5),
+          if (!widget.esGrupo)
+            Container(
+              margin: const EdgeInsets.only(right: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(999),
               ),
-              tooltip: 'Diccionario personalizado',
-              onPressed: () {
-                final auth = context.read<AuthViewModel>();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DiccionarioView(
-                      usuarioId: auth.usuario!.id!,
-                      contactoId: widget.otroUsuarioId,
-                      contactoNombre: widget.otroUsuarioNombre,
+              child: IconButton(
+                icon: const Icon(
+                  Icons.menu_book_outlined,
+                  size: 20,
+                  color: Color(0xFF4F46E5),
+                ),
+                tooltip: 'Diccionario personalizado',
+                onPressed: () {
+                  if (widget.otroUsuarioId == null) return;
+                  final auth = context.read<AuthViewModel>();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DiccionarioView(
+                        usuarioId: auth.usuario!.id!,
+                        contactoId: widget.otroUsuarioId!,
+                        contactoNombre: tituloChat,
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-          ),
+                  );
+                },
+              ),
+            )
+          else
+            const SizedBox(width: 16),
         ],
       ),
       body: Column(
@@ -284,16 +423,39 @@ class _ChatViewState extends State<ChatView> {
                                     audioUrl: mensaje.audioUrl!,
                                     esPropio: esPropio,
                                   )
-                                : Text(
-                                    texto,
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500,
-                                      height: 1.4,
-                                      color: esPropio
-                                          ? Colors.white
-                                          : const Color(0xFF1A1A1C),
-                                    ),
+                                : Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (widget.esGrupo &&
+                                          !esPropio &&
+                                          mensaje.remitenteNombre != null)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 2,
+                                          ),
+                                          child: Text(
+                                            mensaje.remitenteNombre!,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF4F46E5),
+                                            ),
+                                          ),
+                                        ),
+                                      Text(
+                                        texto,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w500,
+                                          height: 1.4,
+                                          color: esPropio
+                                              ? Colors.white
+                                              : const Color(0xFF1A1A1C),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                           ),
                         ),
@@ -340,7 +502,10 @@ class _ChatViewState extends State<ChatView> {
                   )
                 else
                   IconButton(
-                    icon: const Icon(Icons.send, color: Color(0xFF006677)),
+                    icon: const Icon(
+                      Icons.send,
+                      color: Color.fromARGB(255, 46, 0, 119),
+                    ),
                     onPressed: _enviando ? null : _enviar,
                   ),
               ],
@@ -349,5 +514,44 @@ class _ChatViewState extends State<ChatView> {
         ],
       ),
     );
+  }
+
+  // ═══════════════════════════════════════════════════════
+  //  ABRIR DETALLES DEL CONTACTO/GRUPO
+  // ═══════════════════════════════════════════════════════
+  void _abrirDetalles() {
+    // 👈 DECIDIR QUÉ VISTA ABRIR SEGÚN EL TIPO
+    if (widget.esGrupo) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DetallesGrupoView(
+            nombre: widget.titulo ?? "Grupo",
+            fotoUrl: null,
+            conversacionId: widget.conversacionId,
+          ),
+        ),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DetallesContactoView(
+            nombre:
+                _nombreMostrar ??
+                widget.otroUsuarioNombre ??
+                widget.titulo ??
+                'Usuario',
+            username: null,
+            telefono: null,
+            fotoUrl: _fotoMostrar,
+            esGrupo: false,
+            cantidadMiembros: null,
+            conversacionId: widget.conversacionId,
+            otroUsuarioId: widget.otroUsuarioId,
+          ),
+        ),
+      );
+    }
   }
 }

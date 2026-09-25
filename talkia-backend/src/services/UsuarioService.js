@@ -202,6 +202,71 @@ class UsuarioService {
       .filter(u => u.id !== excluirId)
       .map(({ contraseña, ...resto }) => resto); // nunca devolver la contraseña
   }
+
+  static async actualizarFotoPerfil(usuarioId, nombreArchivo) {
+    const usuario = await UsuarioRepository.buscarPorId(usuarioId);
+    if (!usuario) throw new Error("Usuario no encontrado.");
+
+    const fotoUrl = `/uploads/fotos_perfil/${nombreArchivo}`;
+    await UsuarioRepository.actualizarPorId(usuarioId, { foto_url: fotoUrl });
+
+    return { ...usuario, foto_url: fotoUrl };
+  }
+
+  // ─── ACTUALIZAR DATOS PERSONALES ────────────────────────
+  static async actualizarDatosPersonales(id, { nombre, apellido, correo }) {
+    const usuario = await UsuarioRepository.buscarPorId(id);
+    if (!usuario) {
+      throw new Error("Usuario no encontrado.");
+    }
+
+    const cambios = {};
+
+    // Validar y actualizar nombre
+    if (nombre !== undefined) {
+      if (nombre.trim() === "") throw new Error("El nombre no puede estar vacío.");
+      cambios.nombre = nombre.trim();
+    }
+
+    // Validar y actualizar apellido
+    if (apellido !== undefined) {
+      if (apellido.trim() === "") throw new Error("El apellido no puede estar vacío.");
+      cambios.apellido = apellido.trim();
+    }
+
+    // Validar y actualizar correo
+    if (correo !== undefined) {
+      if (!correo.includes("@")) throw new Error("Correo no válido.");
+
+      // Verificar que el nuevo correo no esté en uso por otro usuario
+      const existente = await UsuarioRepository.buscarPorCorreo(correo);
+      if (existente && existente.id !== id) {
+        throw new Error("Ese correo ya está registrado por otro usuario.");
+      }
+      cambios.correo = correo.trim();
+    }
+
+    if (Object.keys(cambios).length === 0) {
+      throw new Error("No hay cambios para actualizar.");
+    }
+
+    return await UsuarioRepository.actualizarPorId(id, cambios);
+  }
+
+  // ─── ACTUALIZAR INFO (ESTADO) ───────────────────────────
+  static async actualizarInfo(id, info) {
+    const usuario = await UsuarioRepository.buscarPorId(id);
+    if (!usuario) throw new Error("Usuario no encontrado.");
+
+    if (!info || info.trim() === "") {
+      throw new Error("El estado no puede estar vacío.");
+    }
+
+    await UsuarioRepository.actualizarPorId(id, { info: info.trim() });
+
+    const actualizado = await UsuarioRepository.buscarPorId(id);
+    return actualizado;
+  }
 }
 
 module.exports = UsuarioService;

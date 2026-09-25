@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:io';
 import '../data/models/Usuario_Model.dart';
 import '../data/services/Usuario_Service.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -86,6 +87,26 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  // ─── CERRAR SESIÓN ──────────────────────────────────────
+  Future<void> cerrarSesion() async {
+    // Cerrar sesión de Google (por si inició con Google)
+    try {
+      final googleSignIn = GoogleSignIn.instance;
+      await googleSignIn.signOut();
+    } catch (_) {
+      // Si no había sesión de Google, ignorar
+    }
+
+    // Limpiar todo el estado local
+    _usuario = null;
+    _token = null;
+    _errorMessage = null;
+    _isLoading = false;
+
+    // Notificar a la UI
+    notifyListeners();
+  }
+
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
@@ -120,16 +141,19 @@ class AuthViewModel extends ChangeNotifier {
       );
     }
 
-    _googleSub = googleSignIn.authenticationEvents.listen(
-      (event) async {
-        if (event is GoogleSignInAuthenticationEventSignIn) {
-          await _procesarLoginGoogle(event.user);
-        }
-      },
-      onError: (error) {
-        _setError("Error con Google: $error");
-      },
-    );
+    // 👇 LISTENER SOLO EN WEB
+    if (kIsWeb) {
+      _googleSub = googleSignIn.authenticationEvents.listen(
+        (event) async {
+          if (event is GoogleSignInAuthenticationEventSignIn) {
+            await _procesarLoginGoogle(event.user);
+          }
+        },
+        onError: (error) {
+          _setError("Error con Google: $error");
+        },
+      );
+    }
 
     _googleInicializado = true;
     notifyListeners();
@@ -211,6 +235,63 @@ class AuthViewModel extends ChangeNotifier {
         nuevaPassword: nuevaPassword,
       );
       _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _setError(e.toString().replaceFirst('Exception: ', ''));
+      return false;
+    }
+  }
+
+  Future<bool> actualizarFotoPerfil({required File foto}) async {
+    _setLoading(true);
+    try {
+      _usuario = await UsuarioService.actualizarFotoPerfil(
+        usuarioId: _usuario!.id!,
+        foto: foto,
+      );
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError(e.toString().replaceFirst('Exception: ', ''));
+      return false;
+    }
+  }
+
+  Future<bool> actualizarDatosPersonales({
+    String? nombre,
+    String? apellido,
+    String? correo,
+  }) async {
+    if (_usuario?.id == null) return false;
+
+    _setLoading(true);
+    try {
+      _usuario = await UsuarioService.actualizarDatosPersonales(
+        usuarioId: _usuario!.id!,
+        nombre: nombre,
+        apellido: apellido,
+        correo: correo,
+      );
+      _setLoading(false);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _setError(e.toString().replaceFirst('Exception: ', ''));
+      return false;
+    }
+  }
+
+  Future<bool> actualizarInfo({required String info}) async {
+    if (_usuario?.id == null) return false;
+
+    _setLoading(true);
+    try {
+      _usuario = await UsuarioService.actualizarInfo(
+        usuarioId: _usuario!.id!,
+        info: info,
+      );
+      _setLoading(false);
       notifyListeners();
       return true;
     } catch (e) {

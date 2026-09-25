@@ -161,4 +161,56 @@ class ChatService {
       throw Exception(data["error"] ?? "Error al enviar audio");
     }
   }
+
+  static Future<ConversacionModel> crearGrupo({
+    required String nombre,
+    required String creadorId,
+    required List<String> participantes,
+  }) async {
+    final response = await http.post(
+      Uri.parse("$baseUrl/grupo"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "nombre": nombre,
+        "creadorId": creadorId,
+        "participantes": participantes,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 201) {
+      return ConversacionModel.fromJson(data);
+    }
+    throw Exception(data["error"] ?? "Error al crear el grupo");
+  }
+
+  static Future<void> eliminarConversacionSiEstaVacia(
+    String conversacionId,
+  ) async {
+    try {
+      await http.delete(
+        Uri.parse("$baseUrl/conversacion/$conversacionId/vacia"),
+      );
+    } catch (_) {
+      // Falla silenciosa
+    }
+  }
+
+  // ─── OBTENER PARTICIPANTES DE UN GRUPO ─────────────────
+  static Future<List<Map<String, dynamic>>> obtenerParticipantes(
+    String conversacionId,
+  ) async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/participantes/$conversacionId"),
+      headers: {"Content-Type": "application/json"},
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(data);
+    } else {
+      throw Exception(data["error"] ?? "Error al obtener participantes");
+    }
+  }
 }

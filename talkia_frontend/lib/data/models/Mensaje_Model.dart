@@ -9,6 +9,7 @@ class MensajeModel {
   final String? audioUrl;
   final DateTime fecha;
   final bool leido;
+  final String? remitenteNombre; // ← campo nuevo
 
   MensajeModel({
     this.id,
@@ -21,6 +22,7 @@ class MensajeModel {
     this.audioUrl,
     required this.fecha,
     this.leido = false,
+    this.remitenteNombre,
   });
 
   factory MensajeModel.fromJson(Map<String, dynamic> json) {
@@ -37,6 +39,7 @@ class MensajeModel {
       audioUrl: json['audioUrl'],
       fecha: DateTime.parse(json['fecha']),
       leido: json['leido'] ?? false,
+      remitenteNombre: json['remitenteNombre'],
     );
   }
 }

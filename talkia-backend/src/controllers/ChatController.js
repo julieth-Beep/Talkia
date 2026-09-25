@@ -108,6 +108,44 @@ class ChatController {
       res.status(400).json({ error: error.message });
     }
   }
+
+  // ─── Crear grupo ────────────────────────────────────────
+  static async crearGrupo(req, res) {
+    try {
+      const { nombre, creadorId, participantes } = req.body;
+
+      if (!creadorId) {
+        return res.status(400).json({ error: "Se requiere creadorId" });
+      }
+
+      const grupo = await ChatService.crearGrupo({ nombre, creadorId, participantes });
+      res.status(201).json(grupo);
+    } catch (error) {
+      console.error("Error creando grupo:", error);
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  static async eliminarSiEstaVacia(req, res) {
+    try {
+      const { conversacionId } = req.params;
+      await ChatService.eliminarSiEstaVacia(conversacionId);
+      res.status(200).json({ mensaje: "Verificado" });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  static async obtenerParticipantes(req, res) {
+    try {
+      const { conversacionId } = req.params;
+      const participantes = await ChatService.obtenerParticipantes(conversacionId);
+      res.status(200).json(participantes);
+    } catch (error) {
+      console.error("Error obteniendo participantes:", error);
+      res.status(400).json({ error: error.message });
+    }
+  }
 }
 
 module.exports = ChatController;
