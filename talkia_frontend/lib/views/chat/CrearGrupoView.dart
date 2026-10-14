@@ -9,7 +9,12 @@ import '../../data/models/Contacto_Model.dart';
 import 'ChatView.dart';
 
 class CrearGrupoView extends StatefulWidget {
-  const CrearGrupoView({super.key});
+  final String? contactoPreseleccionadoId; // 👈 nuevo: contacto que viene preseleccionado
+
+  const CrearGrupoView({
+    super.key,
+    this.contactoPreseleccionadoId,
+  });
 
   @override
   State<CrearGrupoView> createState() => _CrearGrupoViewState();
@@ -23,6 +28,23 @@ class _CrearGrupoViewState extends State<CrearGrupoView> {
   bool _cargando = true;
   bool _creando = false;
   final TextEditingController _busquedaController = TextEditingController();
+
+  // ─────────────── PALETA (claro = valores originales, oscuro = equivalentes) ───────────────
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get _scaffoldBg => _isDark ? const Color(0xFF121316) : const Color(0xFFF8F9FA);
+  Color get _appBarFg => _isDark ? const Color(0xFFE6E1E9) : const Color(0xFF1A1A1C);
+  Color get _accent => _isDark ? const Color(0xFFA5B4FC) : const Color(0xFF4F46E5);
+  Color get _onSurface => _isDark ? const Color(0xFFE6E1E9) : const Color(0xFF1A1A1C);
+  Color get _onSurfaceVariant => _isDark ? const Color(0xFFA1A1AA) : const Color(0xFF52525B);
+  Color get _onSurfaceTertiary => _isDark ? const Color(0xFF71717A) : const Color(0xFF9CA3AF);
+  Color get _cardBg => _isDark ? const Color(0xFF1B1D24) : Colors.white;
+  Color get _fieldFillGrey => _isDark ? const Color(0xFF1B1D24) : Colors.grey.shade100;
+  Color get _fieldFillWhite => _isDark ? const Color(0xFF1B1D24) : Colors.white;
+  Color get _selectedBg => _isDark
+      ? const Color(0xFF4F46E5).withValues(alpha: 0.20)
+      : const Color(0xFF4F46E5).withValues(alpha: 0.08);
+  // ==========================================================================================
 
   @override
   void initState() {
@@ -62,6 +84,17 @@ class _CrearGrupoViewState extends State<CrearGrupoView> {
       setState(() {
         _personas = personas;
         _filtradas = personas;
+
+        // 👈 Preseleccionar el contacto si vino desde DetallesContactoView
+        if (widget.contactoPreseleccionadoId != null) {
+          final existe = personas.any(
+            (p) => p.id == widget.contactoPreseleccionadoId,
+          );
+          if (existe) {
+            _seleccionados.add(widget.contactoPreseleccionadoId!);
+          }
+        }
+
         _cargando = false;
       });
     } catch (e) {
@@ -96,10 +129,10 @@ class _CrearGrupoViewState extends State<CrearGrupoView> {
       );
       return;
     }
-    if (_seleccionados.length < 2) {
+    if (_seleccionados.length < 1) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text("Selecciona al menos 2 miembros (tú eres el 3º)")),
+            content: Text("Selecciona al menos 1 miembro (tú eres el 2º)")),
       );
       return;
     }
@@ -140,25 +173,25 @@ class _CrearGrupoViewState extends State<CrearGrupoView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: _scaffoldBg,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Nuevo grupo',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A1C),
+            color: _appBarFg,
             letterSpacing: -0.5,
           ),
         ),
-        backgroundColor: const Color(0xFFF8F9FA).withValues(alpha: 0.8),
-        foregroundColor: const Color(0xFF1A1A1C),
+        backgroundColor: _scaffoldBg.withValues(alpha: 0.8),
+        foregroundColor: _appBarFg,
         elevation: 0,
         centerTitle: false,
       ),
       body: _cargando
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF4F46E5)))
+          ? Center(
+              child: CircularProgressIndicator(color: _accent))
           : Column(
               children: [
                 // Nombre del grupo
@@ -166,16 +199,18 @@ class _CrearGrupoViewState extends State<CrearGrupoView> {
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: TextField(
                     controller: _nombreController,
+                    style: TextStyle(color: _onSurface),
+                    cursorColor: _accent,
                     decoration: InputDecoration(
                       hintText: "Nombre del grupo",
+                      hintStyle: TextStyle(color: _onSurfaceVariant),
                       filled: true,
-                      fillColor: Colors.grey.shade100,
+                      fillColor: _fieldFillGrey,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
                       ),
-                      prefixIcon: const Icon(Icons.group,
-                          color: Color(0xFF4F46E5)),
+                      prefixIcon: Icon(Icons.group, color: _accent),
                     ),
                   ),
                 ),
@@ -186,8 +221,7 @@ class _CrearGrupoViewState extends State<CrearGrupoView> {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       "Miembros: ${_seleccionados.length + 1} (contándote)",
-                      style: const TextStyle(
-                          fontSize: 13, color: Color(0xFF52525B)),
+                      style: TextStyle(fontSize: 13, color: _onSurfaceVariant),
                     ),
                   ),
                 ),
@@ -197,12 +231,14 @@ class _CrearGrupoViewState extends State<CrearGrupoView> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: TextField(
                     controller: _busquedaController,
+                    style: TextStyle(color: _onSurface),
+                    cursorColor: _accent,
                     decoration: InputDecoration(
                       hintText: "Buscar en mis contactos...",
-                      prefixIcon: const Icon(Icons.search,
-                          color: Color(0xFF52525B)),
+                      hintStyle: TextStyle(color: _onSurfaceVariant),
+                      prefixIcon: Icon(Icons.search, color: _onSurfaceVariant),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: _fieldFillWhite,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -225,25 +261,25 @@ class _CrearGrupoViewState extends State<CrearGrupoView> {
                                 Icon(
                                   Icons.people_outline,
                                   size: 64,
-                                  color: const Color(0xFF52525B)
+                                  color: _onSurfaceVariant
                                       .withValues(alpha: 0.4),
                                 ),
                                 const SizedBox(height: 16),
-                                const Text(
+                                Text(
                                   "No tienes contactos ni conversaciones aún",
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 15,
-                                    color: Color(0xFF52525B),
+                                    color: _onSurfaceVariant,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                const Text(
+                                Text(
                                   "Agrega contactos o inicia un chat primero",
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: Color(0xFF9CA3AF),
+                                    color: _onSurfaceTertiary,
                                   ),
                                 ),
                               ],
@@ -263,15 +299,12 @@ class _CrearGrupoViewState extends State<CrearGrupoView> {
                             return Container(
                               margin: const EdgeInsets.only(bottom: 8),
                               decoration: BoxDecoration(
-                                color: seleccionado
-                                    ? const Color(0xFF4F46E5)
-                                        .withValues(alpha: 0.08)
-                                    : Colors.white,
+                                color: seleccionado ? _selectedBg : _cardBg,
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black
-                                        .withValues(alpha: 0.05),
+                                        .withValues(alpha: _isDark ? 0.25 : 0.05),
                                     blurRadius: 10,
                                     offset: const Offset(0, 2),
                                   ),
@@ -290,21 +323,21 @@ class _CrearGrupoViewState extends State<CrearGrupoView> {
                                 },
                                 title: Text(
                                   u.nombreMostrar,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
-                                    color: Color(0xFF1A1A1C),
+                                    color: _onSurface,
                                   ),
                                 ),
                                 subtitle: Text(
                                   "@${u.username} · ${u.idiomaPredeterminado}",
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 13,
-                                    color: Color(0xFF52525B),
+                                    color: _onSurfaceVariant,
                                   ),
                                 ),
                                 secondary: CircleAvatar(
-                                  backgroundColor: const Color(0xFF4F46E5)
+                                  backgroundColor: _accent
                                       .withValues(alpha: 0.1),
                                   child: ClipOval(
                                     child: fotoUrl.isNotEmpty
@@ -319,39 +352,73 @@ class _CrearGrupoViewState extends State<CrearGrupoView> {
                                         : _avatarPersona(),
                                   ),
                                 ),
-                                activeColor: const Color(0xFF4F46E5),
+                                activeColor: _accent,
+                                checkColor: Colors.white,
                               ),
                             );
                           },
                         ),
                 ),
-                // Botón crear
+                // Botón crear — con el gradiente y sombra del botón "Traducir"
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: SizedBox(
                     width: double.infinity,
                     height: 52,
-                    child: ElevatedButton.icon(
+                    child: ElevatedButton(
                       onPressed: _creando ? null : _crearGrupo,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4F46E5),
-                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.zero,
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        disabledBackgroundColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      icon: _creando
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Icon(Icons.group_add),
-                      label: const Text(
-                        "Crear grupo",
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600),
+                      child: Ink(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF4F46E5)
+                                  .withValues(alpha: 0.25),
+                              blurRadius: 30,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Container(
+                          alignment: Alignment.center,
+                          child: _creando
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.group_add,
+                                        color: Colors.white, size: 20),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      "Crear grupo",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
                       ),
                     ),
                   ),
@@ -362,9 +429,9 @@ class _CrearGrupoViewState extends State<CrearGrupoView> {
   }
 
   Widget _avatarPersona() {
-    return const Icon(
+    return Icon(
       Icons.person,
-      color: Color(0xFF4F46E5),
+      color: _accent,
       size: 22,
     );
   }

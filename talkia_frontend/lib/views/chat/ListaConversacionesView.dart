@@ -11,6 +11,7 @@ import '../../data/models/Contacto_Model.dart';
 import 'ChatView.dart';
 import 'CrearGrupoView.dart';
 import 'MisContactosView.dart';
+import '../perfil/Configuracion.dart';
 
 class ListaConversacionesView extends StatefulWidget {
   const ListaConversacionesView({super.key});
@@ -25,6 +26,19 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
   bool _cargando = true;
   final TextEditingController _busquedaController = TextEditingController();
 
+  // ─────────────── PALETA ───────────────
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get _scaffoldBg => _isDark ? const Color(0xFF121316) : const Color(0xFFF8F9FA);
+  Color get _accent => _isDark ? const Color(0xFFA5B4FC) : const Color(0xFF4F46E5);
+  Color get _onSurface => _isDark ? const Color(0xFFE6E1E9) : const Color(0xFF1A1A1C);
+  Color get _onSurfaceVariant => _isDark ? const Color(0xFFA1A1AA) : const Color(0xFF52525B);
+  Color get _cardBg => _isDark ? const Color(0xFF1B1D24) : Colors.white;
+  Color get _fieldFill => _isDark ? const Color(0xFF1B1D24) : Colors.white;
+  Color get _fabBg => _isDark ? const Color(0xFF4B4A66) : const Color.fromARGB(255, 122, 121, 167);
+  Color get _botonPrimario => _isDark ? const Color(0xFF4338CA) : const Color(0xFF4F46E5);
+  // ──────────────────────────────────────
+
   @override
   void initState() {
     super.initState();
@@ -38,7 +52,6 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
     super.dispose();
   }
 
-  // ═══════════════ HELPER: COMPLETAR URL ═══════════════
   String _completarUrl(String url) {
     if (url.isEmpty) return '';
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -69,7 +82,6 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
     }
   }
 
-  // ── Derivados ────────────────────────────────────────────
   List<ConversacionModel> get _grupos =>
       _conversaciones.where((c) => c.esGrupo).toList();
 
@@ -160,14 +172,22 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
     _cargarConversaciones();
   }
 
+  Future<void> _config() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ConfigView()),
+    );
+  }
+
   Future<void> _agregarContacto() async {
     final auth = context.read<AuthViewModel>();
     if (auth.usuario?.id == null) return;
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: _scaffoldBg,
       isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -197,28 +217,28 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
     final buscando = _busquedaController.text.trim().isNotEmpty;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: _scaffoldBg,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Chats',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A1C),
+            color: _onSurface,
             letterSpacing: -0.5,
           ),
         ),
-        backgroundColor: const Color(0xFFF8F9FA),
-        foregroundColor: const Color(0xFF1A1A1C),
+        backgroundColor: _scaffoldBg,
+        foregroundColor: _onSurface,
         elevation: 0,
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1C)),
+          icon: Icon(Icons.arrow_back, color: _onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Color(0xFF1A1A1C)),
+            icon: Icon(Icons.more_vert, color: _onSurface),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -227,47 +247,42 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
                 _agregarContacto();
               } else if (value == 'crear_grupo') {
                 _crearGrupo();
-              } else if (value == 'ajustes') {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Ajustes — próximamente"),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
+              } else if (value == 'config') {
+                _config();
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'agregar_contacto',
                 child: Row(
                   children: [
-                    Icon(Icons.person_add, size: 20, color: Color(0xFF4F46E5)),
-                    SizedBox(width: 12),
-                    Text("Agregar Contacto"),
+                    Icon(Icons.person_add, size: 20, color: _accent),
+                    const SizedBox(width: 12),
+                    const Text("Agregar Contacto"),
                   ],
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'crear_grupo',
                 child: Row(
                   children: [
-                    Icon(Icons.group_add, size: 20, color: Color(0xFF4F46E5)),
-                    SizedBox(width: 12),
-                    Text("Crear grupo"),
+                    Icon(Icons.group_add, size: 20, color: _accent),
+                    const SizedBox(width: 12),
+                    const Text("Crear grupo"),
                   ],
                 ),
               ),
-              const PopupMenuItem(
-                value: 'ajustes',
+              PopupMenuItem(
+                value: 'config',
                 child: Row(
                   children: [
                     Icon(
                       Icons.settings_outlined,
                       size: 20,
-                      color: Color(0xFF52525B),
+                      color: _onSurfaceVariant,
                     ),
-                    SizedBox(width: 12),
-                    Text("Ajustes"),
+                    const SizedBox(width: 12),
+                    const Text("Ajustes"),
                   ],
                 ),
               ),
@@ -278,14 +293,14 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _abrirMisContactos,
-        backgroundColor: const Color.fromARGB(255, 122, 121, 167),
+        backgroundColor: _fabBg,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: const Icon(Icons.contacts),
       ),
       body: _cargando
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF4F46E5)),
+          ? Center(
+              child: CircularProgressIndicator(color: _accent),
             )
           : Column(
               children: [
@@ -295,15 +310,15 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
                     controller: _busquedaController,
                     decoration: InputDecoration(
                       hintText: "Buscar conversaciones o grupos...",
-                      prefixIcon: const Icon(
+                      prefixIcon: Icon(
                         Icons.search,
-                        color: Color(0xFF52525B),
+                        color: _onSurfaceVariant,
                       ),
                       suffixIcon: buscando
                           ? IconButton(
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.close,
-                                color: Color(0xFF52525B),
+                                color: _onSurfaceVariant,
                               ),
                               onPressed: () {
                                 _busquedaController.clear();
@@ -311,7 +326,7 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
                             )
                           : null,
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: _fieldFill,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -322,7 +337,7 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
                 ),
                 Expanded(
                   child: RefreshIndicator(
-                    color: const Color(0xFF4F46E5),
+                    color: _accent,
                     onRefresh: _cargarConversaciones,
                     child: (_conversaciones.isEmpty)
                         ? ListView(
@@ -337,26 +352,24 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
                                     Icon(
                                       Icons.chat_bubble_outline,
                                       size: 64,
-                                      color: const Color(
-                                        0xFF52525B,
-                                      ).withValues(alpha: 0.3),
+                                      color: _onSurfaceVariant.withValues(alpha: 0.3),
                                     ),
                                     const SizedBox(height: 16),
-                                    const Text(
+                                    Text(
                                       "Aún no tienes conversaciones",
                                       style: TextStyle(
                                         fontSize: 16,
-                                        color: Color(0xFF52525B),
+                                        color: _onSurfaceVariant,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                     const SizedBox(height: 8),
-                                    const Text(
+                                    Text(
                                       "Usa ⋮ para agregar un contacto\no el botón Contactos abajo",
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: Color(0xFF52525B),
+                                        color: _onSurfaceVariant,
                                       ),
                                     ),
                                   ],
@@ -367,7 +380,7 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
                         : (buscando && !hayResultados)
                         ? ListView(
                             physics: const AlwaysScrollableScrollPhysics(),
-                            children: const [
+                            children: [
                               SizedBox(
                                 height: 200,
                                 child: Center(
@@ -375,7 +388,7 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
                                     "Sin resultados",
                                     style: TextStyle(
                                       fontSize: 16,
-                                      color: Color(0xFF52525B),
+                                      color: _onSurfaceVariant,
                                     ),
                                   ),
                                 ),
@@ -384,17 +397,11 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
                           )
                         : ListView(
                             physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.fromLTRB(
-                              16,
-                              0,
-                              16,
-                              80,
-                            ),
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
                             children: [
-                              // ══════════ GRUPOS ══════════
                               if (gruposAMostrar.isNotEmpty) ...[
-                                const Padding(
-                                  padding: EdgeInsets.only(
+                                Padding(
+                                  padding: const EdgeInsets.only(
                                     top: 8,
                                     bottom: 8,
                                     left: 4,
@@ -404,7 +411,7 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFF52525B),
+                                      color: _onSurfaceVariant,
                                     ),
                                   ),
                                 ),
@@ -418,11 +425,9 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
                                   ),
                                 ),
                               ],
-
-                              // ══════════ CONVERSACIONES 1 A 1 ══════════
                               if (chatsAMostrar.isNotEmpty) ...[
-                                const Padding(
-                                  padding: EdgeInsets.only(
+                                Padding(
+                                  padding: const EdgeInsets.only(
                                     top: 8,
                                     bottom: 8,
                                     left: 4,
@@ -432,7 +437,7 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w700,
-                                      color: Color(0xFF52525B),
+                                      color: _onSurfaceVariant,
                                     ),
                                   ),
                                 ),
@@ -457,9 +462,6 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════
-  //  TILE DE CONVERSACIÓN (MISMO DISEÑO)
-  // ═══════════════════════════════════════════════════════
   Widget _buildConversacionTile({
     required String titulo,
     required String subtitulo,
@@ -470,7 +472,7 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -482,13 +484,13 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+          backgroundColor: _accent.withValues(alpha: 0.1),
           radius: 24,
           child: ClipOval(
             child: esGrupo
-                ? const Icon(
+                ? Icon(
                     Icons.group,
-                    color: Color(0xFF4F46E5),
+                    color: _accent,
                     size: 22,
                   )
                 : fotoUrl.isNotEmpty
@@ -504,28 +506,28 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
         ),
         title: Text(
           titulo,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF1A1A1C),
+            color: _onSurface,
           ),
         ),
         subtitle: Text(
           subtitulo,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 14, color: Color(0xFF52525B)),
+          style: TextStyle(fontSize: 14, color: _onSurfaceVariant),
         ),
         trailing: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+            color: _accent.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(999),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.chat_bubble_outline,
             size: 20,
-            color: Color(0xFF4F46E5),
+            color: _accent,
           ),
         ),
         onTap: onTap,
@@ -533,14 +535,11 @@ class _ListaConversacionesViewState extends State<ListaConversacionesView> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════
-  //  AVATAR PERSONA (FALLBACK)
-  // ═══════════════════════════════════════════════════════
   Widget _avatarPersona() {
-    return const Center(
+    return Center(
       child: Icon(
         Icons.person,
-        color: Color(0xFF4F46E5),
+        color: _accent,
         size: 22,
       ),
     );
@@ -568,6 +567,18 @@ class _AgregarContactoSheetState extends State<_AgregarContactoSheet> {
   List<UsuarioContacto> _resultados = [];
   bool _cargando = true;
   bool _buscando = false;
+
+  // ─────────────── PALETA ───────────────
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get _onSurface => _isDark ? const Color(0xFFE6E1E9) : const Color(0xFF1A1A1C);
+  Color get _onSurfaceVariant => _isDark ? const Color(0xFFA1A1AA) : const Color(0xFF52525B);
+  Color get _accent => _isDark ? const Color(0xFFA5B4FC) : const Color(0xFF4F46E5);
+  Color get _cardBg => _isDark ? const Color(0xFF1B1D24) : Colors.white;
+  Color get _fieldFill => _isDark ? const Color(0xFF1B1D24) : Colors.white;
+  Color get _handle => _isDark ? const Color(0xFF3A3D4A) : Colors.grey.shade300;
+  Color get _botonPrimario => _isDark ? const Color(0xFF4338CA) : const Color(0xFF4F46E5);
+  // ──────────────────────────────────────
 
   String _completarUrl(String url) {
     if (url.isEmpty) return '';
@@ -618,6 +629,8 @@ class _AgregarContactoSheetState extends State<_AgregarContactoSheet> {
   }
 
   Future<void> _mostrarModalNombrePersonalizado(UsuarioContacto usuario) async {
+    debugPrint("🟢 _mostrarModalNombrePersonalizado() llamado para ${usuario.username}");
+
     final nombreController = TextEditingController(text: usuario.nombre);
 
     final confirmado = await showDialog<bool>(
@@ -635,7 +648,7 @@ class _AgregarContactoSheetState extends State<_AgregarContactoSheet> {
             ),
             Text(
               "@${usuario.username}",
-              style: const TextStyle(color: Colors.grey, fontSize: 13),
+              style: TextStyle(color: _onSurfaceVariant, fontSize: 13),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -653,9 +666,9 @@ class _AgregarContactoSheetState extends State<_AgregarContactoSheet> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               "Este nombre solo lo verás tú.",
-              style: TextStyle(color: Colors.grey, fontSize: 12),
+              style: TextStyle(color: _onSurfaceVariant, fontSize: 12),
             ),
           ],
         ),
@@ -666,7 +679,7 @@ class _AgregarContactoSheetState extends State<_AgregarContactoSheet> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4F46E5),
+              backgroundColor: _botonPrimario,
               foregroundColor: Colors.white,
             ),
             onPressed: () async {
@@ -698,7 +711,7 @@ class _AgregarContactoSheetState extends State<_AgregarContactoSheet> {
             content: Text(
               "${nombreController.text.trim()} agregado a tus contactos",
             ),
-            backgroundColor: const Color(0xFF4F46E5),
+            backgroundColor: _botonPrimario,
           ),
         );
         widget.onContactoAgregado();
@@ -722,18 +735,18 @@ class _AgregarContactoSheetState extends State<_AgregarContactoSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey.shade300,
+              color: _handle,
               borderRadius: BorderRadius.circular(999),
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
             child: Text(
               "Agregar contacto",
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF1A1A1C),
+                color: _onSurface,
               ),
             ),
           ),
@@ -752,7 +765,7 @@ class _AgregarContactoSheetState extends State<_AgregarContactoSheet> {
               },
               decoration: InputDecoration(
                 hintText: "Buscar por @username, nombre o correo...",
-                prefixIcon: const Icon(Icons.search, color: Color(0xFF52525B)),
+                prefixIcon: Icon(Icons.search, color: _onSurfaceVariant),
                 suffixIcon: _buscando
                     ? const Padding(
                         padding: EdgeInsets.all(12),
@@ -764,7 +777,7 @@ class _AgregarContactoSheetState extends State<_AgregarContactoSheet> {
                       )
                     : null,
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: _fieldFill,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -778,13 +791,13 @@ class _AgregarContactoSheetState extends State<_AgregarContactoSheet> {
             child: _cargando
                 ? const Center(child: CircularProgressIndicator())
                 : _resultados.isEmpty
-                ? const Center(
+                ? Center(
                     child: Padding(
-                      padding: EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(24),
                       child: Text(
                         "No se encontraron usuarios.\nPrueba con otro @username o nombre.",
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Color(0xFF52525B)),
+                        style: TextStyle(color: _onSurfaceVariant),
                       ),
                     ),
                   )
@@ -797,68 +810,92 @@ class _AgregarContactoSheetState extends State<_AgregarContactoSheet> {
                     itemBuilder: (context, i) {
                       final u = _resultados[i];
                       final fotoUrl = _completarUrl(u.fotoUrl ?? '');
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Material(
+                          color: _cardBg,
                           borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: const Color(
-                              0xFF4F46E5,
-                            ).withValues(alpha: 0.1),
-                            radius: 24,
-                            child: ClipOval(
-                              child: fotoUrl.isNotEmpty
-                                  ? Image.network(
-                                      fotoUrl,
-                                      fit: BoxFit.cover,
-                                      width: 48,
-                                      height: 48,
-                                      errorBuilder: (_, __, ___) =>
-                                          _avatarPersona(),
-                                    )
-                                  : _avatarPersona(),
+                          child: InkWell(
+                            // 👈 ÚNICO onTap: cualquier parte del row abre el modal
+                            onTap: () {
+                              debugPrint("🔥 TAP EN ITEM: @${u.username}");
+                              _mostrarModalNombrePersonalizado(u);
+                            },
+                            borderRadius: BorderRadius.circular(16),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor:
+                                        _accent.withValues(alpha: 0.1),
+                                    radius: 24,
+                                    child: ClipOval(
+                                      child: fotoUrl.isNotEmpty
+                                          ? Image.network(
+                                              fotoUrl,
+                                              fit: BoxFit.cover,
+                                              width: 48,
+                                              height: 48,
+                                              errorBuilder: (_, __, ___) =>
+                                                  _avatarPersona(),
+                                            )
+                                          : _avatarPersona(),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "${u.nombre} ${u.apellido}".trim(),
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: _onSurface,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          "@${u.username} · ${u.idiomaPredeterminado}",
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: _onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // 👈 Tocar el ícono también abre el modal
+                                  GestureDetector(
+                                    onTap: () {
+                                      debugPrint("🔥 TAP EN ICONO: @${u.username}");
+                                      _mostrarModalNombrePersonalizado(u);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: _accent
+                                            .withValues(alpha: 0.1),
+                                        borderRadius:
+                                            BorderRadius.circular(999),
+                                      ),
+                                      child: Icon(
+                                        Icons.person_add_alt,
+                                        size: 20,
+                                        color: _accent,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          title: Text(
-                            "${u.nombre} ${u.apellido}".trim(),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF1A1A1C),
-                            ),
-                          ),
-                          subtitle: Text(
-                            "@${u.username} · ${u.idiomaPredeterminado}",
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: Color(0xFF52525B),
-                            ),
-                          ),
-                          trailing: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(
-                                0xFF4F46E5,
-                              ).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: const Icon(
-                              Icons.person_add_alt,
-                              size: 20,
-                              color: Color(0xFF4F46E5),
-                            ),
-                          ),
-                          onTap: () => _mostrarModalNombrePersonalizado(u),
                         ),
                       );
                     },
@@ -870,10 +907,10 @@ class _AgregarContactoSheetState extends State<_AgregarContactoSheet> {
   }
 
   Widget _avatarPersona() {
-    return const Center(
+    return Center(
       child: Icon(
         Icons.person,
-        color: Color(0xFF4F46E5),
+        color: _accent,
         size: 22,
       ),
     );

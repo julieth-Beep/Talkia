@@ -283,6 +283,24 @@ class ChatService {
 
     return participantes.filter(p => p !== null);
   }
+
+    // Vaciar todos los mensajes de una conversación
+  static async vaciarConversacion(conversacionId) {
+    const conversacion = await ConversacionRepository.obtenerPorId(conversacionId);
+    if (!conversacion) throw new Error("Conversación no encontrada");
+
+    const eliminados = await MensajeRepository.eliminarPorConversacion(conversacionId);
+
+    // Resetear el último mensaje de la conversación
+    await ConversacionRepository.actualizarUltimoMensaje(conversacionId, "", {});
+
+    return eliminados;
+  }
+
+  // Eliminar un mensaje individual
+  static async eliminarMensaje(mensajeId) {
+    await MensajeRepository.eliminarPorId(mensajeId);
+  }
 }
 
 module.exports = ChatService;

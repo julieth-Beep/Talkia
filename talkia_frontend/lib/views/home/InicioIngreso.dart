@@ -27,6 +27,26 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
   bool _traduciendo = false;
   int _currentIndex = 0;
 
+  // ─────────────── PALETA (claro = valores originales, oscuro = equivalentes) ───────────────
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get _scaffoldBg => _isDark ? const Color(0xFF121316) : const Color(0xFFF8F9FA);
+  Color get _accent => _isDark ? const Color(0xFFA5B4FC) : const Color(0xFF4F46E5); // acento indigo
+  Color get _onSurface => _isDark ? const Color(0xFFE6E1E9) : const Color(0xFF1A1A1C);
+  Color get _onSurfaceVariant => _isDark ? const Color(0xFFA1A1AA) : const Color(0xFF52525B);
+  Color get _surfaceContainerLowest => _isDark ? const Color(0xFF1B1D24) : const Color(0xFFFFFFFF);
+  Color get _surfaceContainer => _isDark ? const Color(0xFF1E2028) : const Color(0xFFFAFAFA);
+  Color get _sourceCardBg => _isDark ? const Color(0xFF1B1D24) : const Color(0xFFFDFDFD);
+  Color get _targetCardBg => _isDark
+      ? const Color(0xFF4F46E5).withValues(alpha: 0.12)
+      : const Color(0xFF4F46E5).withValues(alpha: 0.05);
+  Color get _border => _isDark ? const Color(0xFF3F414D) : const Color(0xFFD4D4D8);
+  Color get _divider => _isDark ? const Color(0xFF2A2D3A) : const Color(0xFFF4F4F5);
+  Color get _handle => _isDark ? const Color(0xFF3A3D4A) : const Color(0xFFD4D4D8);
+  Color get _error => _isDark ? const Color(0xFFFFB4AB) : const Color(0xFFBA1A1A);
+  Color get _onError => _isDark ? const Color(0xFF690005) : const Color(0xFFFFFFFF);
+  // ───────────────────────────────────────────────────────────────────────────────────────────
+
   final List<String> _languages = [
     'Español',
     'Inglés',
@@ -72,8 +92,8 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFBA1A1A),
-              foregroundColor: Colors.white,
+              backgroundColor: _error,
+              foregroundColor: _onError,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -184,7 +204,7 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
     final isMobile = MediaQuery.of(context).size.width < 768;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: _scaffoldBg,
       body: Stack(
         children: [
           // Overlay para cerrar menús al tocar fuera
@@ -238,7 +258,7 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
       height: 80,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F9FA).withValues(alpha: 0.8),
+        color: _scaffoldBg.withValues(alpha: 0.8),
       ),
       child: ClipRect(
         child: BackdropFilter(
@@ -248,7 +268,7 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFAFAFA),
+                  color: _surfaceContainer,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -258,19 +278,19 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                     ),
                   ],
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.translate,
-                  color: Color(0xFF4F46E5),
+                  color: _accent,
                   size: 24,
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+              Text(
                 'Traductor',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF1A1A1C),
+                  color: _onSurface,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -289,9 +309,9 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.chat_bubble_outline,
-                    color: Color(0xFF52525B),
+                    color: _onSurfaceVariant,
                     size: 24,
                   ),
                 ),
@@ -309,9 +329,9 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.more_vert,
-                    color: Color(0xFF52525B),
+                    color: _onSurfaceVariant,
                     size: 24,
                   ),
                 ),
@@ -335,10 +355,10 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
           margin: const EdgeInsets.only(top: 12),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFFFFF),
+            color: _surfaceContainerLowest,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: const Color(0xFFD4D4D8).withValues(alpha: 0.2),
+              color: _border.withValues(alpha: 0.2),
             ),
             boxShadow: [
               BoxShadow(
@@ -370,7 +390,7 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
               _profileMenuItem(Icons.help_outline, 'Ayuda y Soporte', () {
                 setState(() => _showProfileMenu = false);
               }),
-              const Divider(height: 1, color: Color(0xFFF4F4F5)),
+              Divider(height: 1, color: _divider),
               _profileMenuItem(Icons.logout, 'Cerrar Sesión', () {
                 _cerrarSesion();
               }, isDestructive: true),
@@ -388,14 +408,14 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: const Color(0xFF52525B)),
+            Icon(icon, size: 20, color: _onSurfaceVariant),
             const SizedBox(width: 16),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF1A1A1C),
+                color: _onSurface,
               ),
             ),
           ],
@@ -419,12 +439,8 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
     VoidCallback onTap, {
     bool isDestructive = false,
   }) {
-    final color = isDestructive
-        ? const Color(0xFFBA1A1A)
-        : const Color(0xFF1A1A1C);
-    final iconColor = isDestructive
-        ? const Color(0xFFBA1A1A)
-        : const Color(0xFF52525B);
+    final color = isDestructive ? _error : _onSurface;
+    final iconColor = isDestructive ? _error : _onSurfaceVariant;
 
     return InkWell(
       onTap: onTap,
@@ -493,7 +509,7 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
             Container(
               height: 350, // <-- ALTURA FIJA: ya no crece con el texto
               decoration: BoxDecoration(
-                color: const Color(0xFFFDFDFD),
+                color: _sourceCardBg,
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
@@ -504,7 +520,7 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                 ],
                 border: Border.all(
                   color: _sourceController.text.isNotEmpty
-                      ? const Color(0xFF4F46E5).withValues(alpha: 0.2)
+                      ? _accent.withValues(alpha: 0.2)
                       : Colors.transparent,
                   width: 2,
                 ),
@@ -517,22 +533,23 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                     return TextField(
                       controller: _sourceController,
                       maxLines: null,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 22,
                         height: 1.5,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF1A1A1C),
+                        color: _onSurface,
                       ),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: 'Escribe algo para traducir...',
                         hintStyle: TextStyle(
-                          color: Color(0xFF52525B),
+                          color: _onSurfaceVariant,
                           fontWeight: FontWeight.w400,
                         ),
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.zero,
                       ),
                       onChanged: (_) => setState(() {}),
+                      cursorColor: _accent,
                     );
                   },
                 ),
@@ -544,7 +561,7 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFAFAFA),
+                  color: _surfaceContainer,
                   borderRadius: BorderRadius.circular(999),
                   boxShadow: [
                     BoxShadow(
@@ -640,7 +657,7 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
         Container(
           height: 350, // <-- ALTURA FIJA: ya no se encoge con el texto
           decoration: BoxDecoration(
-            color: const Color(0xFF4F46E5).withValues(alpha: 0.05),
+            color: _targetCardBg,
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
@@ -668,8 +685,8 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                           height: 1.5,
                           fontWeight: FontWeight.w500,
                           color: _targetController.text.isEmpty
-                              ? const Color(0xFF52525B).withValues(alpha: 0.8)
-                              : const Color(0xFF1A1A1C),
+                              ? _onSurfaceVariant.withValues(alpha: 0.8)
+                              : _onSurface,
                         ),
                       );
                     },
@@ -683,7 +700,7 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFFFFF),
+                    color: _surfaceContainerLowest,
                     borderRadius: BorderRadius.circular(999),
                     boxShadow: [
                       BoxShadow(
@@ -723,10 +740,10 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFFFF),
+              color: _surfaceContainerLowest,
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
-                color: const Color(0xFFD4D4D8).withValues(alpha: 0.1),
+                color: _border.withValues(alpha: 0.1),
               ),
               boxShadow: [
                 BoxShadow(
@@ -741,17 +758,17 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
               children: [
                 Text(
                   language,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF1A1A1C),
+                    color: _onSurface,
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(
+                Icon(
                   Icons.keyboard_arrow_down,
                   size: 20,
-                  color: Color(0xFF52525B),
+                  color: _onSurfaceVariant,
                 ),
               ],
             ),
@@ -768,10 +785,10 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFFFFF),
+          color: _surfaceContainerLowest,
           shape: BoxShape.circle,
           border: Border.all(
-            color: const Color(0xFFD4D4D8).withValues(alpha: 0.1),
+            color: _border.withValues(alpha: 0.1),
           ),
           boxShadow: [
             BoxShadow(
@@ -784,7 +801,7 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
         child: Icon(
           vertical ? Icons.swap_vert : Icons.swap_horiz,
           size: 28,
-          color: const Color(0xFF4F46E5),
+          color: _accent,
         ),
       ),
     );
@@ -797,7 +814,7 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(999)),
-        child: Icon(icon, size: 20, color: const Color(0xFF52525B)),
+        child: Icon(icon, size: 20, color: _onSurfaceVariant),
       ),
     );
   }
@@ -817,10 +834,10 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
               bottom: MediaQuery.of(context).padding.bottom,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFFFF).withValues(alpha: 0.9),
+              color: _surfaceContainerLowest.withValues(alpha: 0.9),
               border: Border(
                 top: BorderSide(
-                  color: const Color(0xFFD4D4D8).withValues(alpha: 0.1),
+                  color: _border.withValues(alpha: 0.1),
                 ),
               ),
               boxShadow: [
@@ -875,7 +892,7 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: _currentIndex == 2
-                              ? const Color(0xFF4F46E5).withValues(alpha: 0.1)
+                              ? _accent.withValues(alpha: 0.1)
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -885,8 +902,8 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                               : Icons.person_outline,
                           size: 24,
                           color: _currentIndex == 2
-                              ? const Color(0xFF4F46E5)
-                              : const Color(0xFF52525B),
+                              ? _accent
+                              : _onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -898,8 +915,8 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
                               ? FontWeight.w600
                               : FontWeight.w500,
                           color: _currentIndex == 2
-                              ? const Color(0xFF4F46E5)
-                              : const Color(0xFF52525B),
+                              ? _accent
+                              : _onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -919,8 +936,8 @@ class _InicioIngresoViewState extends State<InicioIngresoView> {
     required bool isActive,
     required VoidCallback onTap,
   }) {
-    const activeColor = Color(0xFF4F46E5);
-    const inactiveColor = Color(0xFF52525B);
+    final activeColor = _accent;
+    final inactiveColor = _onSurfaceVariant;
 
     return GestureDetector(
       onTap: onTap,
@@ -970,10 +987,18 @@ class _LanguageBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final bg = isDark ? const Color(0xFF1B1D24) : const Color(0xFFFFFFFF);
+    final handle = isDark ? const Color(0xFF3A3D4A) : const Color(0xFFD4D4D8);
+    final titleColor = isDark ? const Color(0xFFE6E1E9) : const Color(0xFF1A1A1C);
+    final dividerColor = isDark ? const Color(0xFF2A2D3A) : const Color(0xFFF4F4F5);
+    final accent = isDark ? const Color(0xFFA5B4FC) : const Color(0xFF4F46E5);
+
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
+        color: bg,
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
@@ -991,32 +1016,32 @@ class _LanguageBottomSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFFD4D4D8),
+              color: handle,
               borderRadius: BorderRadius.circular(999),
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.all(20),
+          Padding(
+            padding: const EdgeInsets.all(20),
             child: Text(
               'Seleccionar idioma',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF1A1A1C),
+                color: titleColor,
               ),
             ),
           ),
-          const Divider(height: 1, color: Color(0xFFF4F4F5)),
+          Divider(height: 1, color: dividerColor),
           Flexible(
             child: ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: languages.length,
-              separatorBuilder: (_, __) => const Divider(
+              separatorBuilder: (_, __) => Divider(
                 height: 1,
                 indent: 20,
                 endIndent: 20,
-                color: Color(0xFFF4F4F5),
+                color: dividerColor,
               ),
               itemBuilder: (context, index) {
                 final lang = languages[index];
@@ -1031,11 +1056,11 @@ class _LanguageBottomSheet extends StatelessWidget {
                     child: Row(
                       children: [
                         if (isSelected)
-                          const Padding(
-                            padding: EdgeInsets.only(right: 16),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 16),
                             child: Icon(
                               Icons.check,
-                              color: Color(0xFF4F46E5),
+                              color: accent,
                               size: 20,
                             ),
                           )
@@ -1048,9 +1073,7 @@ class _LanguageBottomSheet extends StatelessWidget {
                             fontWeight: isSelected
                                 ? FontWeight.w600
                                 : FontWeight.w500,
-                            color: isSelected
-                                ? const Color(0xFF4F46E5)
-                                : const Color(0xFF1A1A1C),
+                            color: isSelected ? accent : titleColor,
                           ),
                         ),
                       ],

@@ -15,18 +15,27 @@ class PerfilView extends StatefulWidget {
 }
 
 class _PerfilViewState extends State<PerfilView> {
-  // ─── Colores del design system ─────────────────────────
-  static const Color _surface = Color(0xFFF8F9FF);
-  static const Color _onSurface = Color(0xFF0B1C30);
-  static const Color _onSurfaceVariant = Color(0xFF464554);
-  static const Color _primary = Color(0xFF2A14B4);
+  // ─── Paleta (claro = valores originales, oscuro = equivalentes) ───
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get _surface => _isDark ? const Color(0xFF121316) : const Color(0xFFF8F9FF);
+  Color get _onSurface => _isDark ? const Color(0xFFE6E1E9) : const Color(0xFF0B1C30);
+  Color get _onSurfaceVariant => _isDark ? const Color(0xFFC6C4D0) : const Color(0xFF464554);
+  Color get _primary => _isDark ? const Color(0xFFBFC3FF) : const Color(0xFF2A14B4);
   static const Color _primaryContainer = Color(0xFF4338CA);
   static const Color _onPrimary = Color(0xFFFFFFFF);
-  static const Color _surfaceContainerLow = Color(0xFFEFF4FF);
-  static const Color _surfaceContainerHigh = Color(0xFFDCE9FF);
-  static const Color _surfaceContainerLowest = Color(0xFFFFFFFF);
-  static const Color _error = Color(0xFFBA1A1A);
-  static const Color _errorContainer = Color(0xFFFFDAD6);
+  Color get _surfaceContainerLow => _isDark ? const Color(0xFF2A2D3A) : const Color(0xFFEFF4FF);
+  Color get _surfaceContainerHigh => _isDark ? const Color(0xFF2B2F3E) : const Color(0xFFDCE9FF);
+  Color get _surfaceContainerLowest => _isDark ? const Color(0xFF1B1D24) : const Color(0xFFFFFFFF);
+  Color get _error => _isDark ? const Color(0xFFFFB4AB) : const Color(0xFFBA1A1A);
+  Color get _errorContainer => _isDark ? const Color(0xFF93000A) : const Color(0xFFFFDAD6);
+  Color get _onError => _isDark ? const Color(0xFF690005) : const Color(0xFFFFFFFF);
+  Color get _scaffoldBg => _isDark ? const Color(0xFF121316) : const Color(0xFFF8F9FA);
+  Color get _appBarFg => _isDark ? const Color(0xFFE6E1E9) : const Color(0xFF1A1A1C);
+  Color get _handle => _isDark ? const Color(0xFF3A3D4A) : const Color(0xFFD4D4D8);
+  Color get _divider => _isDark ? const Color(0xFF2A2D3A) : const Color(0xFFF4F4F5);
+  // Botones rellenos (fondo marca + texto blanco en ambos modos)
+  Color get _botonPrimario => _isDark ? const Color(0xFF4338CA) : const Color(0xFF2A14B4);
 
   static const List<Map<String, dynamic>> _opcionesInfo = [
     {'texto': 'Disponible'},
@@ -65,28 +74,28 @@ class _PerfilViewState extends State<PerfilView> {
     final fotoUrl = _completarUrl(usuario?.fotoUrl ?? '');
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: _scaffoldBg,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Perfil',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A1C),
+            color: _appBarFg,
             letterSpacing: -0.5,
           ),
         ),
-        backgroundColor: const Color(0xFFF8F9FA),
-        foregroundColor: const Color(0xFF1A1A1C),
+        backgroundColor: _scaffoldBg,
+        foregroundColor: _appBarFg,
         elevation: 0,
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1C)),
+          icon: Icon(Icons.arrow_back, color: _appBarFg),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.qr_code_2, color: _primary, size: 24),
+            icon: Icon(Icons.qr_code_2, color: _primary, size: 24),
             onPressed: () {},
             splashRadius: 24,
           ),
@@ -224,7 +233,7 @@ class _PerfilViewState extends State<PerfilView> {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: _primary,
+                      color: _botonPrimario,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
@@ -253,7 +262,7 @@ class _PerfilViewState extends State<PerfilView> {
   Widget _avatarFallback() {
     return Container(
       color: _surfaceContainerHigh,
-      child: const Icon(Icons.person, size: 60, color: _primary),
+      child: Icon(Icons.person, size: 60, color: _primary),
     );
   }
 
@@ -267,7 +276,7 @@ class _PerfilViewState extends State<PerfilView> {
       builder: (sheetContext) => Container(
         margin: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: _surfaceContainerLowest,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -278,22 +287,22 @@ class _PerfilViewState extends State<PerfilView> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFFD4D4D8),
+                color: _handle,
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.all(20),
+            Padding(
+              padding: const EdgeInsets.all(20),
               child: Text(
                 'Cambiar foto de perfil',
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF1A1A1C),
+                  color: _appBarFg,
                 ),
               ),
             ),
-            const Divider(height: 0, color: Color(0xFFF4F4F5)),
+            Divider(height: 0, color: _divider),
             ListTile(
               leading: Container(
                 width: 40,
@@ -302,7 +311,7 @@ class _PerfilViewState extends State<PerfilView> {
                   color: _primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.photo_camera, color: _primary),
+                child: Icon(Icons.photo_camera, color: _primary),
               ),
               title: const Text(
                 'Tomar foto',
@@ -319,7 +328,7 @@ class _PerfilViewState extends State<PerfilView> {
                   color: _primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.photo_library, color: _primary),
+                child: Icon(Icons.photo_library, color: _primary),
               ),
               title: const Text(
                 'Elegir de la galería',
@@ -350,7 +359,7 @@ class _PerfilViewState extends State<PerfilView> {
       context: context,
       barrierDismissible: false,
       builder: (_) =>
-          const Center(child: CircularProgressIndicator(color: _primary)),
+          Center(child: CircularProgressIndicator(color: _primary)),
     );
 
     try {
@@ -435,7 +444,7 @@ class _PerfilViewState extends State<PerfilView> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: _primary,
+              backgroundColor: _botonPrimario,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -459,7 +468,7 @@ class _PerfilViewState extends State<PerfilView> {
       context: context,
       barrierDismissible: false,
       builder: (_) =>
-          const Center(child: CircularProgressIndicator(color: _primary)),
+          Center(child: CircularProgressIndicator(color: _primary)),
     );
 
     try {
@@ -544,7 +553,7 @@ class _PerfilViewState extends State<PerfilView> {
                       children: [
                         Text(
                           label.toUpperCase(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: _onSurfaceVariant,
@@ -556,7 +565,7 @@ class _PerfilViewState extends State<PerfilView> {
                           value,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: _onSurface,
@@ -565,7 +574,7 @@ class _PerfilViewState extends State<PerfilView> {
                       ],
                     ),
                   ),
-                  const Icon(Icons.edit, color: _primary, size: 20),
+                  Icon(Icons.edit, color: _primary, size: 20),
                 ],
               ),
             ),
@@ -628,7 +637,7 @@ class _PerfilViewState extends State<PerfilView> {
                         children: [
                           Text(
                             items[i]['label'].toString().toUpperCase(),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: _onSurfaceVariant,
@@ -640,7 +649,7 @@ class _PerfilViewState extends State<PerfilView> {
                             items[i]['value'],
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                               color: _onSurface,
@@ -702,10 +711,10 @@ class _PerfilViewState extends State<PerfilView> {
                   color: _surfaceContainerLow,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.qr_code, color: _primary, size: 22),
+                child: Icon(Icons.qr_code, color: _primary, size: 22),
               ),
               const SizedBox(width: 16),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -717,7 +726,7 @@ class _PerfilViewState extends State<PerfilView> {
                         color: _onSurface,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       'Comparte tu contacto al instante',
                       style: TextStyle(fontSize: 13, color: _onSurfaceVariant),
@@ -728,7 +737,7 @@ class _PerfilViewState extends State<PerfilView> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.qr_code_scanner, color: _primary, size: 22),
+                  Icon(Icons.qr_code_scanner, color: _primary, size: 22),
                   const SizedBox(width: 4),
                   Icon(
                     Icons.chevron_right,
@@ -761,8 +770,8 @@ class _PerfilViewState extends State<PerfilView> {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        icon: const Icon(Icons.logout, size: 20, color: _error),
-        label: const Text(
+        icon: Icon(Icons.logout, size: 20, color: _error),
+        label: Text(
           'Cerrar Sesión',
           style: TextStyle(
             fontSize: 14,
@@ -788,7 +797,7 @@ class _PerfilViewState extends State<PerfilView> {
       builder: (sheetContext) => Container(
         margin: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFFFFF),
+          color: _surfaceContainerLowest,
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
@@ -806,31 +815,31 @@ class _PerfilViewState extends State<PerfilView> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFFD4D4D8),
+                color: _handle,
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.all(20),
+            Padding(
+              padding: const EdgeInsets.all(20),
               child: Text(
                 'Selecciona tu estado',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF1A1A1C),
+                  color: _appBarFg,
                 ),
               ),
             ),
-            const Divider(height: 0, color: Color(0xFFF4F4F5)),
+            Divider(height: 0, color: _divider),
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _opcionesInfo.length,
-              separatorBuilder: (_, __) => const Divider(
+              separatorBuilder: (_, __) => Divider(
                 height: 0.1,
                 indent: 20,
                 endIndent: 20,
-                color: Color(0xFFF4F4F5),
+                color: _divider,
               ),
               itemBuilder: (context, index) {
                 final opcion = _opcionesInfo[index];
@@ -850,7 +859,7 @@ class _PerfilViewState extends State<PerfilView> {
                     child: Row(
                       children: [
                         if (isSelected)
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.only(right: 12),
                             child: Icon(Icons.check, color: _primary, size: 20),
                           )
@@ -865,7 +874,7 @@ class _PerfilViewState extends State<PerfilView> {
                                 : FontWeight.w500,
                             color: isSelected
                                 ? _primary
-                                : const Color(0xFF1A1A1C),
+                                : _appBarFg,
                           ),
                         ),
                       ],
@@ -893,10 +902,10 @@ class _PerfilViewState extends State<PerfilView> {
                         color: _primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: const Icon(Icons.edit, color: _primary, size: 16),
+                      child: Icon(Icons.edit, color: _primary, size: 16),
                     ),
                     const SizedBox(width: 12),
-                    const Text(
+                    Text(
                       'Personalizado...',
                       style: TextStyle(
                         fontSize: 15,
@@ -928,7 +937,7 @@ class _PerfilViewState extends State<PerfilView> {
       context: context,
       barrierDismissible: false,
       builder: (_) =>
-          const Center(child: CircularProgressIndicator(color: _primary)),
+          Center(child: CircularProgressIndicator(color: _primary)),
     );
 
     try {
@@ -978,9 +987,12 @@ class _PerfilViewState extends State<PerfilView> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               "Escribe tu estado",
-              style: TextStyle(fontSize: 13, color: Color(0xFF52525B)),
+              style: TextStyle(
+                fontSize: 13,
+                color: _isDark ? const Color(0xFFA5A3B2) : const Color(0xFF52525B),
+              ),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -1008,7 +1020,7 @@ class _PerfilViewState extends State<PerfilView> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: _primary,
+              backgroundColor: _botonPrimario,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -1112,7 +1124,7 @@ class _PerfilViewState extends State<PerfilView> {
     );
   }
 
-    // ═══════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════
   //  CERRAR SESIÓN
   // ═══════════════════════════════════════════════════════
   Future<void> _cerrarSesion(BuildContext context) async {
@@ -1132,7 +1144,7 @@ class _PerfilViewState extends State<PerfilView> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: _error,
-              foregroundColor: Colors.white,
+              foregroundColor: _onError,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

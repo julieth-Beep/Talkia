@@ -23,11 +23,20 @@ class DetallesGrupoView extends StatefulWidget {
 }
 
 class _DetallesGrupoViewState extends State<DetallesGrupoView> {
-  static const Color _primary = Color(0xFF2A14B4);
-  static const Color _surfaceContainerLow = Color(0xFFEFF4FF);
-  static const Color _onSurface = Color(0xFF0B1C30);
-  static const Color _onSurfaceVariant = Color(0xFF464554);
-  static const Color _error = Color(0xFFBA1A1A);
+  // ─────────────── PALETA (claro = valores originales, oscuro = equivalentes) ───────────────
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get _primary => _isDark ? const Color(0xFFBFC3FF) : const Color(0xFF2A14B4);
+  Color get _surfaceContainerLow => _isDark ? const Color(0xFF2A2D3A) : const Color(0xFFEFF4FF);
+  Color get _onSurface => _isDark ? const Color(0xFFE6E1E9) : const Color(0xFF0B1C30);
+  Color get _onSurfaceVariant => _isDark ? const Color(0xFFC6C4D0) : const Color(0xFF464554);
+  Color get _error => _isDark ? const Color(0xFFFFB4AB) : const Color(0xFFBA1A1A);
+  Color get _scaffoldBg => _isDark ? const Color(0xFF121316) : const Color(0xFFF8F9FA);
+  Color get _appBarIcon => _isDark ? const Color(0xFFE6E1E9) : const Color(0xFF1A1A1C);
+  Color get _accent => _isDark ? const Color(0xFFA5B4FC) : const Color(0xFF4F46E5);
+  Color get _onSurfaceVariantSoft => _isDark ? const Color(0xFFA1A1AA) : const Color(0xFF52525B);
+  Color get _verde => _isDark ? const Color(0xFF34D399) : const Color(0xFF10B981);
+  // ───────────────────────────────────────────────────────────────────────────────────────────
 
   bool _conectandoLlamada = false;
   List<Map<String, dynamic>> _participantes = [];
@@ -100,18 +109,18 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: _scaffoldBg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8F9FA),
+        backgroundColor: _scaffoldBg,
         foregroundColor: _onSurface,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: _onSurface),
+          icon: Icon(Icons.arrow_back, color: _onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Color(0xFF1A1A1C)),
+            icon: Icon(Icons.more_vert, color: _appBarIcon),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -140,27 +149,27 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'agregar_contacto',
                 child: Row(
                   children: [
-                    Icon(Icons.edit, size: 20, color: Color(0xFF4F46E5)),
-                    SizedBox(width: 12),
-                    Text("Editar Grupo"),
+                    Icon(Icons.edit, size: 20, color: _accent),
+                    const SizedBox(width: 12),
+                    const Text("Editar Grupo"),
                   ],
                 ),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'ajustes',
                 child: Row(
                   children: [
                     Icon(
                       Icons.settings_outlined,
                        size: 20,
-                      color: Color(0xFF52525B),
+                      color: _onSurfaceVariantSoft,
                     ),
-                    SizedBox(width: 12),
-                    Text("Ajustes"),
+                    const SizedBox(width: 12),
+                    const Text("Ajustes"),
                   ],
                 ),
               ),
@@ -184,7 +193,7 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
             Text(
               widget.nombre,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w700,
                 color: _onSurface,
@@ -197,7 +206,7 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
             // ─── Cantidad de participantes ───
             Text(
               '${_participantes.length} participantes',
-              style: const TextStyle(fontSize: 16, color: _onSurfaceVariant),
+              style: TextStyle(fontSize: 16, color: _onSurfaceVariant),
             ),
 
             const SizedBox(height: 24),
@@ -278,7 +287,7 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
                 alignment: Alignment.centerLeft,
                 child: Row(
                   children: [
-                    const Text(
+                    Text(
                       'Participantes',
                       style: TextStyle(
                         fontSize: 14,
@@ -290,7 +299,7 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
                     if (!_cargandoParticipantes)
                       Text(
                         '${_participantes.length}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: _primary,
@@ -304,8 +313,8 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
             const SizedBox(height: 8),
 
             if (_cargandoParticipantes)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
                 child: Center(
                   child: CircularProgressIndicator(color: _primary),
                 ),
@@ -371,7 +380,7 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
   }
 
   Widget _avatarFallback() {
-    return const Center(child: Icon(Icons.group, size: 56, color: _primary));
+    return Center(child: Icon(Icons.group, size: 56, color: _primary));
   }
 
   // ─── Tile de participante ───
@@ -417,7 +426,7 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
                         nombreCompleto.isEmpty ? 'Usuario' : nombreCompleto,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                           color: _onSurface,
@@ -435,7 +444,7 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
                           color: _primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(999),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Admin',
                           style: TextStyle(
                             fontSize: 10,
@@ -451,7 +460,7 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
                   const SizedBox(height: 2),
                   Text(
                     '@$username',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       color: _onSurfaceVariant,
                     ),
@@ -466,7 +475,7 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
   }
 
   Widget _avatarPersona() {
-    return const Icon(Icons.person, color: _primary, size: 22);
+    return Icon(Icons.person, color: _primary, size: 22);
   }
 
   // ─── Botón circular ───
@@ -493,8 +502,8 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
                 shape: BoxShape.circle,
               ),
               child: cargando
-                  ? const Padding(
-                      padding: EdgeInsets.all(16),
+                  ? Padding(
+                      padding: const EdgeInsets.all(16),
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         color: _primary,
@@ -507,7 +516,7 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
         const SizedBox(height: 6),
         Text(
           texto,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             color: _onSurfaceVariant,
             fontWeight: FontWeight.w500,
@@ -538,7 +547,7 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
                 children: [
                   Text(
                     texto,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                       color: _onSurface,
@@ -548,7 +557,7 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
                     const SizedBox(height: 2),
                     Text(
                       subtitulo,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         color: _onSurfaceVariant,
                         height: 1.3,
@@ -584,7 +593,7 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
               children: [
                 Text(
                   texto,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                     color: _onSurface,
@@ -594,7 +603,7 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
                   const SizedBox(height: 2),
                   Text(
                     subtitulo,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       color: _onSurfaceVariant,
                       height: 1.3,
@@ -626,8 +635,8 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
             Container(
               width: 44,
               height: 44,
-              decoration: const BoxDecoration(
-                color: Color(0xFF10B981),
+              decoration: BoxDecoration(
+                color: _verde,
                 shape: BoxShape.circle,
               ),
               child: Icon(icono, color: Colors.white, size: 22),
@@ -639,7 +648,7 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
                 children: [
                   Text(
                     texto,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                       color: _onSurface,
@@ -649,7 +658,7 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
                     const SizedBox(height: 2),
                     Text(
                       subtitulo,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         color: _onSurfaceVariant,
                         height: 1.3,
@@ -682,7 +691,7 @@ class _DetallesGrupoViewState extends State<DetallesGrupoView> {
             Expanded(
               child: Text(
                 texto,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: _error,

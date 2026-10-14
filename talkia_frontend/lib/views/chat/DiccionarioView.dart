@@ -26,6 +26,20 @@ class _DiccionarioViewState extends State<DiccionarioView> {
   bool _cargando = true;
   bool _guardando = false;
 
+  // ─────────────── PALETA (claro = valores originales, oscuro = equivalentes) ───────────────
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get _scaffoldBg => _isDark ? const Color(0xFF121316) : const Color(0xFFF8F9FA);
+  Color get _appBarBg => _isDark ? const Color(0xFF1B1D24) : const Color.fromARGB(255, 246, 244, 255);
+  Color get _appBarFg => _isDark ? const Color(0xFFE6E1E9) : const Color.fromARGB(255, 0, 0, 0);
+  Color get _onSurface => _isDark ? const Color(0xFFE6E1E9) : const Color(0xFF1A1A1C);
+  Color get _fieldFill => _isDark ? const Color(0xFF1B1D24) : Colors.grey.shade100;
+  Color get _divider => _isDark ? const Color(0xFF2A2D3A) : const Color(0xFFE5E7EB);
+  Color get _botonBg => _isDark ? const Color(0xFF4338CA) : const Color.fromARGB(255, 128, 105, 172);
+  Color get _arrow => _isDark ? const Color(0xFFA1A1AA) : Colors.grey;
+  Color get _delete => _isDark ? const Color(0xFFFFB4AB) : Colors.red;
+  // ───────────────────────────────────────────────────────────────────────────────────────────
+
   @override
   void initState() {
     super.initState();
@@ -106,10 +120,11 @@ class _DiccionarioViewState extends State<DiccionarioView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: _scaffoldBg,
       appBar: AppBar(
         title: Text('Diccionario con ${widget.contactoNombre}'),
-        backgroundColor: const Color.fromARGB(255, 246, 244, 255),
-        foregroundColor: const Color.fromARGB(255, 0, 0, 0),
+        backgroundColor: _appBarBg,
+        foregroundColor: _appBarFg,
       ),
       body: Column(
         children: [
@@ -117,11 +132,15 @@ class _DiccionarioViewState extends State<DiccionarioView> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                const Align(
+                Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'Agrega una palabra personalizada',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: _onSurface,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -130,10 +149,13 @@ class _DiccionarioViewState extends State<DiccionarioView> {
                     Expanded(
                       child: TextField(
                         controller: _palabraController,
+                        style: TextStyle(color: _onSurface),
+                        cursorColor: _botonBg,
                         decoration: InputDecoration(
                           hintText: 'Palabra original',
+                          hintStyle: TextStyle(color: _isDark ? const Color(0xFFA1A1AA) : Colors.grey.shade600),
                           filled: true,
-                          fillColor: Colors.grey.shade100,
+                          fillColor: _fieldFill,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide.none,
@@ -143,15 +165,18 @@ class _DiccionarioViewState extends State<DiccionarioView> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Icon(Icons.arrow_forward, size: 18, color: Colors.grey),
+                    Icon(Icons.arrow_forward, size: 18, color: _arrow),
                     const SizedBox(width: 8),
                     Expanded(
                       child: TextField(
                         controller: _traduccionController,
+                        style: TextStyle(color: _onSurface),
+                        cursorColor: _botonBg,
                         decoration: InputDecoration(
                           hintText: 'Traducción fija',
+                          hintStyle: TextStyle(color: _isDark ? const Color(0xFFA1A1AA) : Colors.grey.shade600),
                           filled: true,
-                          fillColor: Colors.grey.shade100,
+                          fillColor: _fieldFill,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide.none,
@@ -176,7 +201,7 @@ class _DiccionarioViewState extends State<DiccionarioView> {
                         : const Icon(Icons.add, size: 18),
                     label: const Text('Agregar'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 128, 105, 172),
+                      backgroundColor: _botonBg,
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -184,20 +209,28 @@ class _DiccionarioViewState extends State<DiccionarioView> {
               ],
             ),
           ),
-          const Divider(height: 1),
+          Divider(height: 1, color: _divider),
           Expanded(
             child: _cargando
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(child: CircularProgressIndicator(color: _botonBg))
                 : _entradas.isEmpty
-                    ? const Center(child: Text('Aún no hay palabras personalizadas'))
+                    ? Center(
+                        child: Text(
+                          'Aún no hay palabras personalizadas',
+                          style: TextStyle(color: _onSurface),
+                        ),
+                      )
                     : ListView.builder(
                         itemCount: _entradas.length,
                         itemBuilder: (context, index) {
                           final entrada = _entradas[index];
                           return ListTile(
-                            title: Text('${entrada.palabraOriginal} → ${entrada.traduccionFija}'),
+                            title: Text(
+                              '${entrada.palabraOriginal} → ${entrada.traduccionFija}',
+                              style: TextStyle(color: _onSurface),
+                            ),
                             trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.red),
+                              icon: Icon(Icons.delete_outline, color: _delete),
                               onPressed: () => _eliminarPalabra(entrada.id!),
                             ),
                           );

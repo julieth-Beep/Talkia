@@ -213,4 +213,22 @@ class ChatService {
       throw Exception(data["error"] ?? "Error al obtener participantes");
     }
   }
+
+  static Future<void> vaciarConversacion(String conversacionId) async {
+    final response = await http.delete(
+      Uri.parse("$baseUrl/conversacion/$conversacionId/mensajes"),
+    );
+    if (response.statusCode != 200) {
+      throw Exception("Error al vaciar conversación");
+    }
+  }
+
+  static Future<void> eliminarMensaje(String mensajeId) async {
+    final response = await http.delete(
+      Uri.parse("$baseUrl/mensaje/$mensajeId"),
+    );
+    if (response.statusCode != 200) {
+      throw Exception("Error al eliminar mensaje");
+    }
+  }
 }

@@ -197,4 +197,31 @@ class ChatViewModel extends ChangeNotifier {
       return null;
     }
   }
+
+  Future<bool> eliminarMensaje(String mensajeId) async {
+    try {
+      await ChatService.eliminarMensaje(mensajeId);
+      // Eliminar de la lista local (opcional: recargar)
+      _mensajes.removeWhere((m) => m.id == mensajeId);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = "Error al eliminar: $e";
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> vaciarConversacion(String conversacionId) async {
+    try {
+      await ChatService.vaciarConversacion(conversacionId);
+      _mensajes = [];
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = "Error al vaciar: $e";
+      notifyListeners();
+      return false;
+    }
+  }
 }

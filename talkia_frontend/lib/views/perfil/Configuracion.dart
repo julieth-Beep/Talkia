@@ -5,6 +5,9 @@ import '../../views/perfil/Perfil.dart';
 import '../auth/login_view.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'SeguridadView.dart';
+import 'TerminosView.dart';
+import '../../theme_controller.dart';
 
 class ConfigView extends StatefulWidget {
   const ConfigView({super.key});
@@ -25,162 +28,240 @@ class _ConfigViewState extends State<ConfigView> {
     return url;
   }
 
-  // ═══════════════ COLORES DEL DESIGN SYSTEM ═══════════════
-  static const Color _surface = Color(0xFFF8F9FF);
-  static const Color _onSurface = Color(0xFF0B1C30);
-  static const Color _onSurfaceVariant = Color(0xFF464554);
-  static const Color _outline = Color(0xFF777586);
-  static const Color _primary = Color(0xFF2A14B4);
+  // ================= PALETA =================
+  // En CLARO: mismos valores de antes (diseño intacto).
+  // En OSCURO: equivalentes oscuros para que el tema se aplique de verdad.
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get _onSurface => _isDark ? const Color(0xFFE6E1E9) : const Color(0xFF0B1C30);
+  Color get _onSurfaceVariant => _isDark ? const Color(0xFFC6C4D0) : const Color(0xFF464554);
+  Color get _outline => _isDark ? const Color(0xFF918FA0) : const Color(0xFF777586);
+  Color get _primary => _isDark ? const Color(0xFFBFC3FF) : const Color(0xFF2A14B4);
   static const Color _primaryContainer = Color(0xFF4338CA);
   static const Color _onPrimary = Color(0xFFFFFFFF);
-  static const Color _primaryFixed = Color(0xFFE3DFFF);
-  static const Color _secondary = Color(0xFF0051D5);
-  static const Color _secondaryFixed = Color(0xFFDBE1FF);
-  static const Color _tertiary = Color(0xFF00423C);
-  static const Color _tertiaryContainer = Color(0xFF005C54);
-  static const Color _tertiaryFixed = Color(0xFF89F5E7);
+  Color get _primaryFixed => _isDark ? const Color(0xFF2E2E6E) : const Color(0xFFE3DFFF);
+  Color get _secondary => _isDark ? const Color(0xFFA9C7FF) : const Color(0xFF0051D5);
+  Color get _secondaryFixed => _isDark ? const Color(0xFF233A66) : const Color(0xFFDBE1FF);
+  Color get _tertiary => _isDark ? const Color(0xFF6BD8CB) : const Color(0xFF00423C);
   static const Color _tertiaryFixedDim = Color(0xFF6BD8CB);
-  static const Color _surfaceContainerLow = Color(0xFFEFF4FF);
-  static const Color _surfaceContainerHigh = Color(0xFFDCE9FF);
-  static const Color _surfaceContainerLowest = Color(0xFFFFFFFF);
-  static const Color _error = Color(0xFFBA1A1A);
-  static const Color _errorContainer = Color(0xFFFFDAD6);
+  Color get _surfaceContainerLow => _isDark ? const Color(0xFF2A2D3A) : const Color(0xFFEFF4FF);
+  Color get _surfaceContainerHigh => _isDark ? const Color(0xFF2B2F3E) : const Color(0xFFDCE9FF);
+  Color get _surfaceContainerLowest => _isDark ? const Color(0xFF1B1D24) : const Color(0xFFFFFFFF);
+  Color get _error => _isDark ? const Color(0xFFFFB4AB) : const Color(0xFFBA1A1A);
+  Color get _errorContainer => _isDark ? const Color(0xFF93000A) : const Color(0xFFFFDAD6);
+  Color get _onError => _isDark ? const Color(0xFF690005) : const Color(0xFFFFFFFF);
+  Color get _scaffoldBg => _isDark ? const Color(0xFF121316) : const Color(0xFFF8F9FA);
+  Color get _appBarFg => _isDark ? const Color(0xFFE6E1E9) : const Color(0xFF1A1A1C);
+  // ==========================================
 
-  // ═══════════════ ESTADO ═══════════════
-  bool _showConfigMenu = false;
+  static const Map<String, String> _idiomasDisponibles = {
+    "Español": "ES",
+    "Inglés": "EN",
+    "Francés": "FR",
+    "Italiano": "IT",
+    "Portugués": "PT",
+    "Alemán": "DE",
+    "Mandarín": "ZH",
+  };
+
+  void _proximamente(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Próximamente'), duration: Duration(seconds: 1)),
+    );
+  }
+
+  Future<void> _cambiarIdioma(BuildContext context) async {
+    final auth = context.read<AuthViewModel>();
+    final usuario = auth.usuario;
+    if (usuario == null) return;
+
+    final seleccionado = await showModalBottomSheet<String>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Elige tu idioma',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            ),
+            ..._idiomasDisponibles.keys.map((idioma) => ListTile(
+                  title: Text(idioma),
+                  trailing: idioma == usuario.idiomaPredeterminado
+                      ? Icon(Icons.check, color: _primary)
+                      : null,
+                  onTap: () => Navigator.pop(context, idioma),
+                )),
+          ],
+        ),
+      ),
+    );
+
+    if (seleccionado == null || seleccionado == usuario.idiomaPredeterminado) return;
+    if (!context.mounted) return;
+
+    final exito = await auth.completarPerfil(
+      id: usuario.id!,
+      idiomaPredeterminado: seleccionado,
+    );
+
+    if (!context.mounted) return;
+  }
+
+  Future<void> _cambiarTema(BuildContext context) async {
+    final seleccionado = await showModalBottomSheet<ThemeMode>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Apariencia', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            ),
+            ListTile(
+              title: const Text('Claro'),
+              trailing: themeController.modeNotifier.value == ThemeMode.light
+                  ? Icon(Icons.check, color: _primary) : null,
+              onTap: () => Navigator.pop(context, ThemeMode.light),
+            ),
+            ListTile(
+              title: const Text('Oscuro'),
+              trailing: themeController.modeNotifier.value == ThemeMode.dark
+                  ? Icon(Icons.check, color: _primary) : null,
+              onTap: () => Navigator.pop(context, ThemeMode.dark),
+            ),
+            ListTile(
+              title: const Text('Automático (sistema)'),
+              trailing: themeController.modeNotifier.value == ThemeMode.system
+                  ? Icon(Icons.check, color: _primary) : null,
+              onTap: () => Navigator.pop(context, ThemeMode.system),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (seleccionado == null) return;
+    themeController.setMode(seleccionado);
+  }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthViewModel>();
     final usuario = auth.usuario;
 
-    final nombreCompleto = '${usuario?.nombre ?? ''} ${usuario?.apellido ?? ''}'
-        .trim();
+    final nombreCompleto = '${usuario?.nombre ?? ''} ${usuario?.apellido ?? ''}'.trim();
     final username = usuario?.username ?? '';
-    final correo = usuario?.correo ?? '';
     final fotoUrl = _completarUrl(usuario?.fotoUrl ?? '');
+    final idiomaActual = usuario?.idiomaPredeterminado ?? 'Español';
+    final idiomaCodigo = _idiomasDisponibles[idiomaActual] ?? 'ES';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: _scaffoldBg,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Configuración',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A1C),
-            letterSpacing: -0.5,
-          ),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: _appBarFg, letterSpacing: -0.5),
         ),
-        backgroundColor: const Color(0xFFF8F9FA),
-        foregroundColor: const Color(0xFF1A1A1C),
+        backgroundColor: _scaffoldBg,
+        foregroundColor: _appBarFg,
         elevation: 0,
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1C)),
+          icon: Icon(Icons.arrow_back, color: _appBarFg),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.qr_code_2, color: _primary, size: 24),
-            onPressed: () {},
-            splashRadius: 24,
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ═══════════════ PERFIL SNAPSHOT (BENTO CARD) ═══════════════
             _buildProfileSnapshotCard(
-              nombreCompleto: nombreCompleto.isEmpty
-                  ? 'Usuario'
-                  : nombreCompleto,
+              context: context,
+              nombreCompleto: nombreCompleto.isEmpty ? 'Usuario' : nombreCompleto,
               username: username,
               fotoUrl: fotoUrl,
             ),
             const SizedBox(height: 24),
 
-            // ═══════════════ CUENTA Y SEGURIDAD ═══════════════
-            _buildSectionHeader('Cuenta y Seguridad', trailing: 'Protegida'),
+            _buildSectionHeader('Cuenta y Seguridad'),
             const SizedBox(height: 8),
-            _buildSectionCard([
+            _buildSectionCard(context, [
               {
                 'icon': Icons.manage_accounts,
                 'bgIcon': _primaryFixed,
                 'colorIcon': _primary,
                 'title': 'Cuenta',
                 'subtitle': 'Número, correo y privacidad personal',
+                'onTap': () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const PerfilView()),
+                    ),
               },
               {
                 'icon': Icons.key,
                 'bgIcon': _secondaryFixed,
                 'colorIcon': _secondary,
-                'title': 'Seguridad y Llaves',
-                'subtitle': 'Biometría y 3 sesiones activas',
-                'badge': '2FA ON',
-              },
-              {
-                'icon': Icons.lock,
-                'bgIcon': _tertiaryFixed,
-                'colorIcon': _tertiaryContainer,
-                'title': 'Privacidad',
-                'subtitle': 'Última vez, foto de perfil, confirmaciones',
+                'title': 'Seguridad',
+                'subtitle': 'Correo y contraseña',
+                'onTap': () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SeguridadView()),
+                    ),
               },
             ]),
             const SizedBox(height: 24),
 
-            // ═══════════════ AJUSTES DE LA APLICACIÓN ═══════════════
             _buildSectionHeader('Ajustes de la Aplicación'),
             const SizedBox(height: 8),
-            _buildSectionCard([
+            _buildSectionCard(context, [
               {
                 'icon': Icons.notifications_active,
                 'bgIcon': _surfaceContainerHigh,
                 'colorIcon': _primary,
                 'title': 'Notificaciones y Sonidos',
                 'subtitle': 'Tonos, alertas y vista previa en pantalla',
-              },
-              {
-                'icon': Icons.cloud_sync,
-                'bgIcon': _surfaceContainerHigh,
-                'colorIcon': _primary,
-                'title': 'Chats y Almacenamiento',
-                'subtitle': 'Copia cifrada en la nube y uso de datos',
-                'trailing': '1.2 GB',
+                'onTap': () => _proximamente(context),
               },
               {
                 'icon': Icons.palette,
                 'bgIcon': _surfaceContainerHigh,
                 'colorIcon': _primary,
                 'title': 'Apariencia y Tema',
-                'subtitle': 'Automático, tamaño tipográfico e índigo',
-                'trailingDot': true,
+                'subtitle': 'Claro, oscuro o automático',
+                'onTap': () => _cambiarTema(context),
               },
               {
                 'icon': Icons.translate,
                 'bgIcon': _surfaceContainerHigh,
                 'colorIcon': _primary,
                 'title': 'Idioma',
-                'subtitle': 'Español (España)',
-                'trailingText': 'ES',
+                'subtitle': idiomaActual,
+                'trailingText': idiomaCodigo,
+                'onTap': () => _cambiarIdioma(context),
               },
             ]),
             const SizedBox(height: 24),
 
-            // ═══════════════ SOPORTE Y COMUNIDAD ═══════════════
             _buildSectionHeader('Soporte y Comunidad'),
             const SizedBox(height: 8),
-            _buildSectionCard([
+            _buildSectionCard(context, [
               {
                 'icon': Icons.help_center,
                 'bgIcon': _surfaceContainerLow,
                 'colorIcon': _onSurface,
                 'title': 'Centro de Ayuda',
                 'subtitle': 'Preguntas frecuentes y contacto directo',
+                'onTap': () => _proximamente(context),
               },
               {
                 'icon': Icons.person_add,
@@ -188,6 +269,7 @@ class _ConfigViewState extends State<ConfigView> {
                 'colorIcon': _onSurface,
                 'title': 'Invitar amigos',
                 'subtitle': 'Comparte una invitación con cifrado mutuo',
+                'onTap': () => _proximamente(context),
               },
               {
                 'icon': Icons.verified_user,
@@ -195,26 +277,23 @@ class _ConfigViewState extends State<ConfigView> {
                 'colorIcon': _onSurface,
                 'title': 'Términos y Privacidad',
                 'subtitle': 'Políticas de datos cero registros',
+                'onTap': () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const TerminosView()),
+                    ),
               },
             ]),
             const SizedBox(height: 24),
 
-            // ═══════════════ CERRAR SESIÓN ═══════════════
             _buildBotonCerrarSesion(context),
-
-            // ═══════════════ FOOTER ═══════════════
-            const SizedBox(height: 16),
-            _buildFooter(),
           ],
         ),
       ),
     );
   }
 
-  // ═══════════════════════════════════════════════════════
-  //  PERFIL SNAPSHOT CARD
-  // ═══════════════════════════════════════════════════════
   Widget _buildProfileSnapshotCard({
+    required BuildContext context,
     required String nombreCompleto,
     required String username,
     required String fotoUrl,
@@ -224,155 +303,62 @@ class _ConfigViewState extends State<ConfigView> {
       decoration: BoxDecoration(
         color: _surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 1))],
       ),
-      child: Column(
+      child: Row(
         children: [
-          Row(
+          Stack(
             children: [
-              // Foto con badge verificado
-              Stack(
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _surfaceContainerHigh,
-                    ),
-                    child: ClipOval(
-                      child: fotoUrl.isNotEmpty
-                          ? Image.network(
-                              fotoUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _avatarFallback(),
-                            )
-                          : _avatarFallback(),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      width: 20,
-                      height: 20,
-                      decoration: const BoxDecoration(
-                        color: _primaryContainer,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.verified,
-                        color: _onPrimary,
-                        size: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 16),
-
-              // Nombre + username + badge
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      nombreCompleto,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: _onSurface,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      username.isEmpty ? '@usuario' : '@$username',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: _onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: _tertiaryFixedDim,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        const Text(
-                          'Identidad Cifrada',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: _tertiary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(shape: BoxShape.circle, color: _surfaceContainerHigh),
+                child: ClipOval(
+                  child: fotoUrl.isNotEmpty
+                      ? Image.network(fotoUrl, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _avatarFallback())
+                      : _avatarFallback(),
                 ),
               ),
-
-              // Botón editar
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const PerfilView()),
-                  );
-                },
+              Positioned(
+                bottom: 0,
+                right: 0,
                 child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: _surfaceContainerLow,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.edit, color: _primary, size: 18),
+                  width: 20,
+                  height: 20,
+                  decoration: const BoxDecoration(color: _primaryContainer, shape: BoxShape.circle),
+                  child: const Icon(Icons.verified, color: _onPrimary, size: 12),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickButton({required IconData icon, required String label}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-      decoration: BoxDecoration(
-        color: _surfaceContainerLow,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 18, color: _primary),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: _primary,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(nombreCompleto,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: _onSurface, letterSpacing: -0.2)),
+                const SizedBox(height: 2),
+                Text(username.isEmpty ? '@usuario' : '@$username',
+                    maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: _onSurfaceVariant)),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Container(width: 8, height: 8, decoration: const BoxDecoration(color: _tertiaryFixedDim, shape: BoxShape.circle)),
+                    const SizedBox(width: 6),
+                    Text('Identidad Cifrada', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _tertiary)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PerfilView())),
+            child: Container(
+              width: 36,
+              height: 36,
             ),
           ),
         ],
@@ -381,70 +367,36 @@ class _ConfigViewState extends State<ConfigView> {
   }
 
   Widget _avatarFallback() {
-    return Container(
-      color: _surfaceContainerHigh,
-      child: const Icon(Icons.person, size: 32, color: _primary),
-    );
+    return Container(color: _surfaceContainerHigh, child: Icon(Icons.person, size: 32, color: _primary));
   }
 
-  // ═══════════════════════════════════════════════════════
-  //  SECTION HEADER
-  // ═══════════════════════════════════════════════════════
   Widget _buildSectionHeader(String title, {String? trailing}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title.toUpperCase(),
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: _onSurfaceVariant,
-              letterSpacing: 1.2,
-            ),
-          ),
-          if (trailing != null)
-            Text(
-              trailing,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: _primary,
-              ),
-            ),
+          Text(title.toUpperCase(),
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _onSurfaceVariant, letterSpacing: 1.2)),
+          if (trailing != null) Text(trailing, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: _primary)),
         ],
       ),
     );
   }
 
-  // ═══════════════════════════════════════════════════════
-  //  SECTION CARD (lista de items)
-  // ═══════════════════════════════════════════════════════
-  Widget _buildSectionCard(List<Map<String, dynamic>> items) {
+  Widget _buildSectionCard(BuildContext context, List<Map<String, dynamic>> items) {
     return Container(
       decoration: BoxDecoration(
         color: _surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 1))],
       ),
       child: Column(
         children: [
           for (int i = 0; i < items.length; i++) ...[
             _buildSectionItem(items[i]),
             if (i < items.length - 1)
-              Container(
-                height: 1,
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                color: _surfaceContainerLow,
-              ),
+              Container(height: 1, margin: const EdgeInsets.symmetric(horizontal: 16), color: _surfaceContainerLow),
           ],
         ],
       ),
@@ -455,116 +407,35 @@ class _ConfigViewState extends State<ConfigView> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () {},
+        onTap: item['onTap'] as VoidCallback?,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              // Icono
               Container(
                 width: 36,
                 height: 36,
-                decoration: BoxDecoration(
-                  color: item['bgIcon'],
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                decoration: BoxDecoration(color: item['bgIcon'], borderRadius: BorderRadius.circular(8)),
                 child: Icon(item['icon'], color: item['colorIcon'], size: 20),
               ),
               const SizedBox(width: 12),
-
-              // Textos
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            item['title'],
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: _onSurface,
-                            ),
-                          ),
-                        ),
-                        if (item['badge'] != null) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _surfaceContainerHigh,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              item['badge'],
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: _primary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
+                    Text(item['title'], maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _onSurface)),
                     const SizedBox(height: 2),
-                    Text(
-                      item['subtitle'] ?? '',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: _onSurfaceVariant,
-                      ),
-                    ),
+                    Text(item['subtitle'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 12, color: _onSurfaceVariant)),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-
-              // Trailing
-              if (item['trailing'] != null)
-                Text(
-                  item['trailing'],
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: _onSurfaceVariant,
-                  ),
-                ),
               if (item['trailingText'] != null)
-                Text(
-                  item['trailingText'],
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: _primary,
-                  ),
-                ),
-              if (item['trailingDot'] == true)
-                Container(
-                  width: 16,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: _primaryContainer,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 2,
-                      ),
-                    ],
-                  ),
-                ),
+                Text(item['trailingText'], style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _primary)),
               const SizedBox(width: 6),
-              const Icon(Icons.chevron_right, color: _outline, size: 20),
+              Icon(Icons.chevron_right, color: _outline, size: 20),
             ],
           ),
         ),
@@ -572,9 +443,6 @@ class _ConfigViewState extends State<ConfigView> {
     );
   }
 
-  // ═══════════════════════════════════════════════════════
-  //  BOTÓN CERRAR SESIÓN
-  // ═══════════════════════════════════════════════════════
   Widget _buildBotonCerrarSesion(BuildContext context) {
     return SizedBox(
       width: double.infinity,
@@ -585,36 +453,14 @@ class _ConfigViewState extends State<ConfigView> {
           backgroundColor: _errorContainer.withValues(alpha: 0.4),
           foregroundColor: _error,
           elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        icon: const Icon(Icons.logout, size: 20, color: _error),
-        label: const Text(
-          'Cerrar Sesión',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: _error,
-          ),
-        ),
+        icon: Icon(Icons.logout, size: 20, color: _error),
+        label: Text('Cerrar Sesión', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _error)),
       ),
     );
   }
 
-  // ═══════════════════════════════════════════════════════
-  //  FOOTER
-  // ═══════════════════════════════════════════════════════
-  Widget _buildFooter() {
-    return Column(children: [
-        
-      ],
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════
-  //  CERRAR SESIÓN
-  // ═══════════════════════════════════════════════════════
   Future<void> _cerrarSesion(BuildContext context) async {
     final confirmado = await showDialog<bool>(
       context: context,
@@ -623,18 +469,10 @@ class _ConfigViewState extends State<ConfigView> {
         title: const Text("Cerrar sesión"),
         content: const Text("¿Estás seguro que quieres cerrar sesión?"),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text("Cancelar"),
-          ),
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text("Cancelar")),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: _error,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+                backgroundColor: _error, foregroundColor: _onError, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
             onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text("Cerrar sesión"),
           ),

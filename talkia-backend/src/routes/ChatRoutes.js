@@ -12,5 +12,7 @@ router.post("/mensaje-audio", upload.single("audio"), ChatController.enviarMensa
 router.post("/grupo", ChatController.crearGrupo); 
 router.delete("/conversacion/:conversacionId/vacia", ChatController.eliminarSiEstaVacia);
 router.get("/participantes/:conversacionId", ChatController.obtenerParticipantes);
+router.delete("/conversacion/:conversacionId/mensajes", ChatController.vaciarConversacion);
+router.delete("/mensaje/:mensajeId", ChatController.eliminarMensaje);
 
 module.exports = router;

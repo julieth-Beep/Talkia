@@ -146,6 +146,28 @@ class ChatController {
       res.status(400).json({ error: error.message });
     }
   }
+
+    static async vaciarConversacion(req, res) {
+    try {
+      const { conversacionId } = req.params;
+      const eliminados = await ChatService.vaciarConversacion(conversacionId);
+      res.status(200).json({ ok: true, eliminados });
+    } catch (error) {
+      console.error("Error vaciando conversación:", error);
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  static async eliminarMensaje(req, res) {
+    try {
+      const { mensajeId } = req.params;
+      await ChatService.eliminarMensaje(mensajeId);
+      res.status(200).json({ ok: true });
+    } catch (error) {
+      console.error("Error eliminando mensaje:", error);
+      res.status(400).json({ error: error.message });
+    }
+  }
 }
 
 module.exports = ChatController;

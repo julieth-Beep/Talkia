@@ -43,6 +43,25 @@ class _ChatViewState extends State<ChatView> {
   String? _nombreMostrar;
   String? _fotoMostrar;
 
+  // ─────────────── PALETA (claro = valores originales, oscuro = equivalentes) ───────────────
+  bool get _isDark => Theme.of(context).brightness == Brightness.dark;
+
+  Color get _scaffoldBg => _isDark ? const Color(0xFF121316) : const Color(0xFFF8F9FA);
+  Color get _accent => _isDark ? const Color(0xFFA5B4FC) : const Color(0xFF4F46E5);
+  Color get _onSurface => _isDark ? const Color(0xFFE6E1E9) : const Color(0xFF1A1A1C);
+  Color get _onSurfaceVariant => _isDark ? const Color(0xFFA1A1AA) : const Color(0xFF52525B);
+  Color get _videocam => _isDark ? const Color(0xFF62CBD8) : const Color(0xFF006677);
+  // Burbujas
+  Color get _burbujaPropia => _isDark
+      ? const Color.fromARGB(255, 67, 64, 107)
+      : const Color.fromARGB(255, 101, 99, 151);
+  Color get _burbujaAjena => _isDark ? const Color(0xFF1B1D24) : const Color(0xFFFFFFFF);
+  // Barra inferior de escritura
+  Color get _barraInferiorBg => _isDark ? const Color(0xFF1B1D24) : const Color(0xFFFFFFFF);
+  Color get _campoFill => _isDark ? const Color(0xFF23252E) : Colors.grey.shade100;
+  Color get _botonEnviar => _isDark ? const Color(0xFFA5B4FC) : const Color.fromARGB(255, 46, 0, 119);
+  // ───────────────────────────────────────────────────────────────────────────────────────────
+
   @override
   void initState() {
     super.initState();
@@ -195,10 +214,10 @@ class _ChatViewState extends State<ChatView> {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+          color: _accent.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
-        child: const Icon(Icons.group, color: Color(0xFF4F46E5), size: 22),
+        child: Icon(Icons.group, color: _accent, size: 22),
       );
     }
 
@@ -209,7 +228,7 @@ class _ChatViewState extends State<ChatView> {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+        color: _accent.withValues(alpha: 0.1),
         shape: BoxShape.circle,
       ),
       child: ClipOval(
@@ -227,12 +246,12 @@ class _ChatViewState extends State<ChatView> {
   Widget _avatarInicial() {
     final nombre = _nombreMostrar ?? widget.otroUsuarioNombre ?? 'U';
     return Container(
-      color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+      color: _accent.withValues(alpha: 0.1),
       child: Center(
         child: Text(
           nombre.isNotEmpty ? nombre[0].toUpperCase() : '?',
-          style: const TextStyle(
-            color: Color(0xFF4F46E5),
+          style: TextStyle(
+            color: _accent,
             fontWeight: FontWeight.w700,
             fontSize: 16,
           ),
@@ -258,14 +277,14 @@ class _ChatViewState extends State<ChatView> {
         : (_nombreMostrar ?? widget.otroUsuarioNombre ?? "Chat");
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: _scaffoldBg,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8F9FA).withValues(alpha: 0.8),
+        backgroundColor: _scaffoldBg.withValues(alpha: 0.8),
         elevation: 0,
-        foregroundColor: const Color(0xFF1A1A1C),
+        foregroundColor: _onSurface,
         centerTitle: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1C)),
+          icon: Icon(Icons.arrow_back, color: _onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         // 👈 TÍTULO CLICKEABLE: AVATAR + NOMBRE
@@ -280,10 +299,10 @@ class _ChatViewState extends State<ChatView> {
                   tituloChat,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A1C),
+                    color: _onSurface,
                     letterSpacing: -0.3,
                   ),
                 ),
@@ -301,20 +320,20 @@ class _ChatViewState extends State<ChatView> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.videocam_outlined, color: Color(0xFF006677)),
+                : Icon(Icons.videocam_outlined, color: _videocam),
           ),
           if (!widget.esGrupo)
             Container(
               margin: const EdgeInsets.only(right: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+                color: _accent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.menu_book_outlined,
                   size: 20,
-                  color: Color(0xFF4F46E5),
+                  color: _accent,
                 ),
                 tooltip: 'Diccionario personalizado',
                 onPressed: () {
@@ -348,14 +367,14 @@ class _ChatViewState extends State<ChatView> {
                         Icon(
                           Icons.chat_bubble_outline,
                           size: 64,
-                          color: const Color(0xFF52525B).withValues(alpha: 0.3),
+                          color: _onSurfaceVariant.withValues(alpha: 0.3),
                         ),
                         const SizedBox(height: 16),
-                        const Text(
+                        Text(
                           "No hay mensajes aún",
                           style: TextStyle(
                             fontSize: 16,
-                            color: Color(0xFF52525B),
+                            color: _onSurfaceVariant,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -364,9 +383,7 @@ class _ChatViewState extends State<ChatView> {
                           "Envía un mensaje para empezar",
                           style: TextStyle(
                             fontSize: 14,
-                            color: const Color(
-                              0xFF52525B,
-                            ).withValues(alpha: 0.6),
+                            color: _onSurfaceVariant.withValues(alpha: 0.6),
                             fontWeight: FontWeight.w400,
                           ),
                         ),
@@ -407,8 +424,8 @@ class _ChatViewState extends State<ChatView> {
                             ),
                             decoration: BoxDecoration(
                               color: esPropio
-                                  ? const Color.fromARGB(255, 101, 99, 151)
-                                  : const Color(0xFFFFFFFF),
+                                  ? _burbujaPropia
+                                  : _burbujaAjena,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
@@ -423,39 +440,77 @@ class _ChatViewState extends State<ChatView> {
                                     audioUrl: mensaje.audioUrl!,
                                     esPropio: esPropio,
                                   )
-                                : Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (widget.esGrupo &&
-                                          !esPropio &&
-                                          mensaje.remitenteNombre != null)
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            bottom: 2,
-                                          ),
-                                          child: Text(
-                                            mensaje.remitenteNombre!,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w700,
-                                              color: Color(0xFF4F46E5),
+                                : IntrinsicWidth(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        // 👈 Nombre del remitente (solo grupos, ajenos)
+                                        if (widget.esGrupo &&
+                                            !esPropio &&
+                                            mensaje.remitenteNombre != null)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 4,
+                                            ),
+                                            child: Text(
+                                              mensaje.remitenteNombre!,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w700,
+                                                color: _accent,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      Text(
-                                        texto,
-                                        style: TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w500,
-                                          height: 1.4,
-                                          color: esPropio
-                                              ? Colors.white
-                                              : const Color(0xFF1A1A1C),
-                                        ),
-                                      ),
-                                    ],
+
+                                        // ─────────── MIS MENSAJES: solo mi texto ───────────
+                                        if (esPropio)
+                                          Text(
+                                            mensaje.textoOriginal ?? '',
+                                            style: const TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w500,
+                                              height: 1.4,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        // ─────────── AJENOS: original (arriba, más clarito) + traducción (abajo, fuerte) ───────────
+                                        else ...[
+                                          Text(
+                                            mensaje.textoOriginal ?? '',
+                                            style: TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w500,
+                                              height: 1.4,
+                                              color: _onSurfaceVariant, // 👈 arriba más clarito
+                                            ),
+                                          ),
+                                          if (texto.isNotEmpty &&
+                                              texto != mensaje.textoOriginal)
+                                            Padding(
+                                              padding: const EdgeInsets
+                                                  .symmetric(vertical: 8),
+                                              child: Container(
+                                                height: 1,
+                                                color: _onSurfaceVariant
+                                                    .withValues(alpha: 0.20),
+                                              ),
+                                            ),
+                                          if (texto.isNotEmpty &&
+                                              texto != mensaje.textoOriginal)
+                                            Text(
+                                              texto,
+                                              style: TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w500,
+                                                height: 1.4,
+                                                color: _onSurface, // 👈 abajo fuerte
+                                              ),
+                                            ),
+                                        ],
+                                      ],
+                                    ),
                                   ),
                           ),
                         ),
@@ -466,7 +521,7 @@ class _ChatViewState extends State<ChatView> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFFFFF),
+              color: _barraInferiorBg,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.02),
@@ -480,10 +535,13 @@ class _ChatViewState extends State<ChatView> {
                 Expanded(
                   child: TextField(
                     controller: _mensajeController,
+                    style: TextStyle(color: _onSurface),
+                    cursorColor: _accent,
                     decoration: InputDecoration(
                       hintText: "Escribe un mensaje...",
+                      hintStyle: TextStyle(color: _onSurfaceVariant),
                       filled: true,
-                      fillColor: Colors.grey.shade100,
+                      fillColor: _campoFill,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                         borderSide: BorderSide.none,
@@ -502,9 +560,9 @@ class _ChatViewState extends State<ChatView> {
                   )
                 else
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.send,
-                      color: Color.fromARGB(255, 46, 0, 119),
+                      color: _botonEnviar,
                     ),
                     onPressed: _enviando ? null : _enviar,
                   ),

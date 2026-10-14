@@ -21,7 +21,7 @@ class TraduccionService {
 
   async traducir(texto, idiomaDestino, idiomaOrigen = "es") {
     if (!texto || texto.trim() === "") return texto;
-
+ 
     try {
       const target = this.idiomas[idiomaDestino] || idiomaDestino;
       const source = this.idiomas[idiomaOrigen] || idiomaOrigen;

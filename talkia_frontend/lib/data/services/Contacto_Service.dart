@@ -141,4 +141,18 @@ class ContactoService {
     );
     return datos['nombre'] ?? '';
   }
+
+  static Future<List<Map<String, dynamic>>> gruposEnComun({
+    required String duenoId,
+    required String contactoId,
+  }) async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/grupos-en-comun/$duenoId/$contactoId"),
+    );
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(data);
+    }
+    throw Exception(data["error"] ?? "Error al obtener grupos en común");
+  }
 }
